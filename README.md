@@ -33,6 +33,18 @@ funcionam igual; login e upload de fotos exigem um projeto Supabase (local com D
 - Admin local: `admin@movalev.test` (entra por link mágico).
 - Testes das regras de preço: `npm test`.
 
+## Supabase
+
+Projeto `movalev` (ref `cxmkuqkhvdhwvrdkzckk`, São Paulo) na organização lux drive.
+Os `.env` locais já apontam para ele; a senha do banco está só em `api/.env` (guarde num gerenciador de senhas).
+
+- Auth: link mágico por e-mail; tokens ES256 validados na API pelas chaves públicas (JWKS).
+  Redirecionamentos liberados para `localhost:3000` — o domínio da loja entra na fase 7.
+  Configuração em `supabase/config.toml` (`supabase config push` aplica no projeto).
+- Storage: bucket público `produtos` (leitura pública; upload só pela API com a service role).
+- Login com Google: falta criar o OAuth client no Google Cloud e ligar em `[auth.external.google]`.
+- A API usa a `service_role` **legada** (JWT): a chave nova `sb_secret_` ainda é recusada pelo Storage.
+
 ## Decisões
 
 - **Next.js 15.5** em vez de 14: a linha 14 está sem suporte e tem falhas críticas de

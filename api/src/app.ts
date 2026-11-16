@@ -5,6 +5,7 @@ import rateLimit from "@fastify/rate-limit";
 import { ZodError } from "zod";
 import { env } from "./env";
 import { healthRoutes } from "./routes/health";
+import { meRoutes } from "./routes/me";
 
 const LOCALHOST = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 
@@ -51,6 +52,7 @@ export async function buildApp() {
   });
 
   await app.register(healthRoutes);
+  await app.register(meRoutes);
 
   return app;
 }

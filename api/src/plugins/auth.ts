@@ -2,6 +2,7 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import { createRemoteJWKSet, jwtVerify, type JWTPayload } from "jose";
 import { env } from "../env";
 import { prisma } from "../lib/prisma";
+import { supabaseAdmin } from "../lib/supabase";
 
 /**
  * Valida o JWT do Supabase Auth enviado pelo front (Authorization: Bearer <token>).
@@ -26,8 +27,11 @@ declare module "fastify" {
 async function verify(token: string): Promise<JWTPayload> {
   const header = JSON.parse(Buffer.from(token.split(".")[0] ?? "", "base64url").toString("utf8")) as { alg?: string };
   if (header.alg === "HS256") {
-    if (!hsSecret) throw new Error("HS256 sem SUPABASE_JWT_SECRET");
-    return (await jwtVerify(token, hsSecret, { issuer, audience: "authenticated" })).payload;
+    if (hsSecret) return (await jwtVerify(token, hsSecret, { issuer, audience: "authenticated" })).payload;
+    // Sem o segredo legado: o próprio Supabase Auth confirma o token.
+    const { data, error } = await supabaseAdmin().auth.getUser(token);
+    if (error || !data.user) throw error ?? new Error("token inválido");
+    return { sub: data.user.id, email: data.user.email };
   }
   return (await jwtVerify(token, jwks, { issuer, audience: "authenticated" })).payload;
 }
