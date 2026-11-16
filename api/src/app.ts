@@ -6,6 +6,8 @@ import { ZodError } from "zod";
 import { env } from "./env";
 import { healthRoutes } from "./routes/health";
 import { meRoutes } from "./routes/me";
+import { catalogRoutes } from "./routes/catalog";
+import { newsletterRoutes } from "./routes/newsletter";
 
 const LOCALHOST = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 
@@ -53,6 +55,8 @@ export async function buildApp() {
 
   await app.register(healthRoutes);
   await app.register(meRoutes);
+  await app.register(catalogRoutes);
+  await app.register(newsletterRoutes);
 
   return app;
 }

@@ -11,7 +11,9 @@
     "./pricing": "./pricing.ts",
     "./schemas": "./schemas.ts",
     "./money": "./money.ts",
-    "./catalog": "./catalog.ts"
+    "./catalog": "./catalog.ts",
+    "./dto": "./dto.ts",
+    "./content": "./content.ts"
   },
   "scripts": {
     "test": "vitest run",

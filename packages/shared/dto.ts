@@ -1,0 +1,134 @@
+/**
+ * Formato das respostas da API consumidas pela loja.
+ * Valores monetários em centavos.
+ */
+import type { Badge, ImageKind, Model, Pictogram, Sensation, Size } from "./catalog";
+
+export interface ColorDTO {
+  slug: string;
+  name: string;
+  hex: string;
+  placeholderHex: string;
+}
+
+export interface ImageDTO {
+  id: string;
+  kind: ImageKind;
+  /** URL pública da foto; nulo = ainda sem foto (placeholder). */
+  url: string | null;
+  videoUrl: string | null;
+  alt: string;
+  caption: string | null;
+}
+
+export interface SizeOptionDTO {
+  variantId: string;
+  size: Size;
+  available: boolean;
+  priceCents: number;
+}
+
+/** Card da vitrine: um produto numa cor. */
+export interface ProductCardDTO {
+  id: string;
+  slug: string;
+  name: string;
+  priceCents: number;
+  badge: Badge | null;
+  sensation: Sensation;
+  model: Model | null;
+  pictogram: Pictogram;
+  /** Cor exibida no card. */
+  color: ColorDTO;
+  /** Todas as cores do produto (bolinhas). */
+  colors: ColorDTO[];
+  image: ImageDTO | null;
+  /** Tamanhos da cor do card, para a compra rápida. */
+  sizes: SizeOptionDTO[];
+}
+
+export interface ProductColorDetailDTO extends ColorDTO {
+  images: ImageDTO[];
+  sizes: SizeOptionDTO[];
+}
+
+export interface ProductDetailDTO {
+  id: string;
+  slug: string;
+  name: string;
+  nameEmphasis: string | null;
+  priceCents: number;
+  badge: Badge | null;
+  sensation: Sensation;
+  model: Model | null;
+  pictogram: Pictogram;
+  description: string;
+  fabricCare: string;
+  collection: { slug: string; name: string; season: string | null } | null;
+  category: { slug: string; name: string } | null;
+  rating: { average: number; count: number } | null;
+  colors: ProductColorDetailDTO[];
+  completeLook: ProductCardDTO[];
+  youMayLike: ProductCardDTO[];
+}
+
+export interface CategoryDTO {
+  slug: string;
+  name: string;
+  description: string | null;
+  bannerCaption: string | null;
+  bannerUrl: string | null;
+  pictogram: Pictogram;
+  tone: string;
+  showInMenu: boolean;
+}
+
+export interface CategoryPageDTO {
+  category: CategoryDTO;
+  items: ProductCardDTO[];
+  total: number;
+  page: number;
+  pageSize: number;
+  facets: {
+    colors: ColorDTO[];
+    priceMinCents: number;
+    priceMaxCents: number;
+  };
+}
+
+export interface HomeDTO {
+  hero: {
+    kicker: string;
+    titleLine1: string;
+    titleLine2: string;
+    videoUrl: string | null;
+    posterUrl: string | null;
+    caption: string;
+    primaryCta: { label: string; href: string };
+    secondaryCta: { label: string; href: string };
+  };
+  campaign: { title: string; cta: string; items: ProductCardDTO[] };
+  categories: CategoryDTO[];
+  newArrivals: ProductCardDTO[];
+  bestSellers: ProductCardDTO[];
+  shopTheLook: {
+    kicker: string;
+    title: string;
+    titleEmphasis: string;
+    caption: string;
+    imageUrl: string | null;
+    note: string;
+    cta: string;
+    items: { product: ProductCardDTO; hotspot: { x: number; y: number } }[];
+  };
+  sensations: { sensation: Sensation; title: string; text: string; href: string }[];
+  studio: {
+    kicker: string;
+    title: string;
+    titleEmphasis: string;
+    text: string;
+    cta: { label: string; href: string };
+    classes: { title: string; meta: string; tone: string; videoUrl: string | null }[];
+  };
+  instagram: { title: string; handle: string; url: string; tiles: { tone: string; caption: string }[] };
+}

@@ -1,3 +1,6 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 const supabaseHost = (() => {
   try {
     return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321");
@@ -17,6 +20,8 @@ const securityHeaders = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Raiz do monorepo (evita que o Next adote um package-lock.json de fora do projeto).
+  outputFileTracingRoot: path.join(path.dirname(fileURLToPath(import.meta.url)), ".."),
   poweredByHeader: false,
   transpilePackages: ["@movalev/shared"],
   images: {

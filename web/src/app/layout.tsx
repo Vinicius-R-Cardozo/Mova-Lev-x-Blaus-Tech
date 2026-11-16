@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { cormorant, jost } from "./fonts";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
+import { Providers } from "@/components/Providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -20,7 +21,12 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={`${cormorant.variable} ${jost.variable}`}>
-      <body>{children}</body>
+      <body>
+        <a href="#conteudo" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-toast focus:bg-preto focus:px-4 focus:py-3 focus:text-offwhite">
+          Pular para o conteúdo
+        </a>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
