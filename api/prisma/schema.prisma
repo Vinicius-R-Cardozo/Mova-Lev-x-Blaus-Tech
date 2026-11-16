@@ -1,0 +1,508 @@
+// MOVA LEV — schema do banco (Postgres do Supabase).
+// Dinheiro sempre em centavos (Int). RLS é ativado em todas as tabelas
+// pela migração `rls` — a API acessa com o papel dono das tabelas.
+
+generator client {
+  provider        = "prisma-client-js"
+  binaryTargets   = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ───────────────────────────── Pessoas ─────────────────────────────
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+/// Perfil ligado a auth.users (mesmo id do Supabase Auth).
+model Profile {
+  id        String    @id @db.Uuid
+  email     String    @unique
+  name      String?
+  phone     String?
+  cpf       String?
+  role      Role      @default(CUSTOMER)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  addresses Address[]
+  favorites Favorite[]
+  cart      Cart?
+  orders    Order[]
+
+  @@map("profiles")
+}
+
+model Address {
+  id         String   @id @default(uuid()) @db.Uuid
+  profileId  String   @db.Uuid
+  profile    Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  label      String?
+  recipient  String?
+  cep        String   @db.VarChar(8)
+  street     String
+  number     String
+  complement String?
+  district   String
+  city       String
+  uf         String   @db.Char(2)
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([profileId])
+  @@map("addresses")
+}
+
+// ───────────────────────────── Catálogo ─────────────────────────────
+
+enum Sensation {
+  NUVEM
+  BRISA
+}
+
+enum Model {
+  CINTURA_ALTA
+  FLARE
+  SETE_OITAVOS
+  CICLISTA
+}
+
+enum Badge {
+  NOVO
+  MAIS_VENDIDO
+  EDICAO_LIMITADA
+}
+
+enum Pictogram {
+  LEGGING
+  FLARE
+  SHORT
+  TOP
+  MACAQUINHO
+  CASACO
+  CONJUNTO
+  ACESSORIO
+}
+
+enum ProductStatus {
+  ACTIVE
+  DRAFT
+  ARCHIVED
+}
+
+enum Size {
+  PP
+  P
+  M
+  G
+  GG
+}
+
+enum ImageKind {
+  FRENTE
+  COSTAS
+  DETALHE
+  VIDEO
+}
+
+/// Coleções de campanha (ex.: Respiro, Pausa, Ritual).
+model Collection {
+  id          String    @id @default(uuid()) @db.Uuid
+  slug        String    @unique
+  name        String
+  season      String?
+  description String?
+  createdAt   DateTime  @default(now())
+  products    Product[]
+
+  @@map("collections")
+}
+
+/// Categorias da vitrine (/colecao/[slug]): Leggings, Tops, Conjuntos...
+model Category {
+  id            String            @id @default(uuid()) @db.Uuid
+  slug          String            @unique
+  name          String
+  description   String?
+  bannerCaption String?
+  bannerUrl     String?
+  pictogram     Pictogram         @default(LEGGING)
+  tone          String            @default("#E6D5C5")
+  sortOrder     Int               @default(0)
+  showInMenu    Boolean           @default(false)
+  products      ProductCategory[]
+
+  @@map("categories")
+}
+
+model Color {
+  id             String         @id @default(uuid()) @db.Uuid
+  slug           String         @unique
+  name           String
+  hex            String         @db.VarChar(7)
+  /// Fundo do placeholder de foto nessa cor.
+  placeholderHex String         @db.VarChar(7)
+  sortOrder      Int            @default(0)
+  variants       Variant[]
+  productColors  ProductColor[]
+  images         ProductImage[]
+
+  @@map("colors")
+}
+
+model Product {
+  id            String            @id @default(uuid()) @db.Uuid
+  slug          String            @unique
+  /// Nome completo ("Legging Respiro Cintura Alta").
+  name          String
+  /// Parte do nome que vai para a 2ª linha, em itálico, na página de produto ("Cintura Alta").
+  nameEmphasis  String?
+  description   String
+  fabricCare    String
+  priceCents    Int
+  badge         Badge?
+  sensation     Sensation
+  model         Model?
+  pictogram     Pictogram
+  status        ProductStatus     @default(ACTIVE)
+  relevance     Int               @default(0)
+  salesCount    Int               @default(0)
+  ratingAvg     Decimal?          @db.Decimal(2, 1)
+  ratingCount   Int               @default(0)
+  publishedAt   DateTime          @default(now())
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  collectionId  String?           @db.Uuid
+  collection    Collection?       @relation(fields: [collectionId], references: [id], onDelete: SetNull)
+  categories    ProductCategory[]
+  colors        ProductColor[]
+  variants      Variant[]
+  images        ProductImage[]
+  related       ProductRelation[] @relation("relationFrom")
+  relatedTo     ProductRelation[] @relation("relationTo")
+  favorites     Favorite[]
+
+  @@index([status, publishedAt])
+  @@map("products")
+}
+
+model ProductCategory {
+  productId  String   @db.Uuid
+  categoryId String   @db.Uuid
+  sortOrder  Int      @default(0)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([productId, categoryId])
+  @@index([categoryId])
+  @@map("product_categories")
+}
+
+/// Cores em que o produto é vendido, na ordem de exibição.
+model ProductColor {
+  productId String  @db.Uuid
+  colorId   String  @db.Uuid
+  sortOrder Int     @default(0)
+  /// Cor que aparece como card próprio na grade da categoria.
+  featured  Boolean @default(false)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  color     Color   @relation(fields: [colorId], references: [id], onDelete: Restrict)
+
+  @@id([productId, colorId])
+  @@map("product_colors")
+}
+
+model Variant {
+  id         String      @id @default(uuid()) @db.Uuid
+  productId  String      @db.Uuid
+  colorId    String      @db.Uuid
+  size       Size
+  sku        String      @unique
+  /// Estoque disponível para venda (já descontadas as reservas).
+  stock      Int         @default(0)
+  /// Preço próprio da variante; nulo = preço do produto.
+  priceCents Int?
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  color      Color       @relation(fields: [colorId], references: [id], onDelete: Restrict)
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  @@unique([productId, colorId, size])
+  @@index([productId])
+  @@map("variants")
+}
+
+model ProductImage {
+  id          String    @id @default(uuid()) @db.Uuid
+  productId   String    @db.Uuid
+  colorId     String?   @db.Uuid
+  kind        ImageKind @default(FRENTE)
+  /// Caminho no bucket `produtos` do Supabase Storage. Nulo = placeholder.
+  storagePath String?
+  /// URL de vídeo (para kind = VIDEO).
+  videoUrl    String?
+  alt         String
+  /// Legenda do placeholder ("FOTO · FRENTE, FUNDO NEUTRO").
+  caption     String?
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  color       Color?    @relation(fields: [colorId], references: [id], onDelete: SetNull)
+
+  @@index([productId, colorId, sortOrder])
+  @@map("product_images")
+}
+
+enum RelationKind {
+  COMPLETE_LOOK
+  YOU_MAY_LIKE
+}
+
+model ProductRelation {
+  productId String       @db.Uuid
+  relatedId String       @db.Uuid
+  kind      RelationKind
+  sortOrder Int          @default(0)
+  product   Product      @relation("relationFrom", fields: [productId], references: [id], onDelete: Cascade)
+  related   Product      @relation("relationTo", fields: [relatedId], references: [id], onDelete: Cascade)
+
+  @@id([productId, relatedId, kind])
+  @@map("product_relations")
+}
+
+// ───────────────────────────── Sacola e favoritos ─────────────────────────────
+
+model Cart {
+  id        String     @id @default(uuid()) @db.Uuid
+  profileId String     @unique @db.Uuid
+  profile   Profile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  updatedAt DateTime   @updatedAt
+  items     CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  cartId    String  @db.Uuid
+  variantId String  @db.Uuid
+  quantity  Int
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  variant   Variant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@id([cartId, variantId])
+  @@map("cart_items")
+}
+
+model Favorite {
+  profileId String   @db.Uuid
+  productId String   @db.Uuid
+  createdAt DateTime @default(now())
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([profileId, productId])
+  @@map("favorites")
+}
+
+// ───────────────────────────── Pedidos ─────────────────────────────
+
+enum OrderStatus {
+  AGUARDANDO_PAGAMENTO
+  PAGO
+  EM_SEPARACAO
+  ENVIADO
+  ENTREGUE
+  CANCELADO
+}
+
+enum PaymentMethod {
+  PIX
+  CARTAO
+  BOLETO
+}
+
+model Order {
+  id                       String         @id @default(uuid()) @db.Uuid
+  /// Número curto exibido à cliente (#1001...).
+  number                   Int            @unique @default(autoincrement())
+  /// Mesma chave = mesmo pedido; impede duplicar quando a requisição chega duas vezes.
+  idempotencyKey           String         @unique
+  profileId                String?        @db.Uuid
+  profile                  Profile?       @relation(fields: [profileId], references: [id], onDelete: SetNull)
+  email                    String
+  customerName             String
+  customerPhone            String?
+  customerCpf              String?
+  status                   OrderStatus    @default(AGUARDANDO_PAGAMENTO)
+  subtotalCents            Int
+  progressivePercent       Int            @default(0)
+  progressiveDiscountCents Int            @default(0)
+  couponCode               String?
+  couponDiscountCents      Int            @default(0)
+  shippingMethod           String
+  shippingLabel            String
+  shippingDays             Int?
+  shippingCents            Int
+  totalCents               Int
+  paymentMethod            PaymentMethod
+  paymentProvider          String         @default("mock")
+  paymentRef               String?
+  paymentPayload           Json?
+  /// Endereço copiado no momento da compra.
+  shippingAddress          Json?
+  trackingCode             String?
+  /// Reserva de estoque vale até aqui; depois o job cancela e devolve o estoque.
+  expiresAt                DateTime
+  stockReleasedAt          DateTime?
+  confirmationEmailSentAt  DateTime?
+  createdAt                DateTime       @default(now())
+  updatedAt                DateTime       @updatedAt
+  items                    OrderItem[]
+  events                   OrderEvent[]
+  redemption               CouponRedemption?
+
+  @@index([status, expiresAt])
+  @@index([profileId])
+  @@index([email])
+  @@map("orders")
+}
+
+model OrderItem {
+  id             String  @id @default(uuid()) @db.Uuid
+  orderId        String  @db.Uuid
+  variantId      String  @db.Uuid
+  productName    String
+  colorName      String
+  size           Size
+  sku            String
+  unitPriceCents Int
+  quantity       Int
+  order          Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variant        Variant @relation(fields: [variantId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+model OrderEvent {
+  id        String       @id @default(uuid()) @db.Uuid
+  orderId   String       @db.Uuid
+  status    OrderStatus?
+  message   String
+  actor     String?
+  createdAt DateTime     @default(now())
+  order     Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("order_events")
+}
+
+// ───────────────────────────── Promoções ─────────────────────────────
+
+enum CouponType {
+  PERCENT
+  FIXED
+}
+
+model Coupon {
+  id                String             @id @default(uuid()) @db.Uuid
+  code              String             @unique
+  description       String?
+  type              CouponType
+  /// PERCENT: 10 = 10%. FIXED: centavos.
+  value             Int
+  minSubtotalCents  Int                @default(0)
+  firstPurchaseOnly Boolean            @default(false)
+  /// Se falso, não acumula com o desconto progressivo (vale o maior).
+  stacksWithProgressive Boolean        @default(true)
+  maxRedemptions    Int?
+  redemptionsCount  Int                @default(0)
+  active            Boolean            @default(true)
+  startsAt          DateTime?
+  endsAt            DateTime?
+  createdAt         DateTime           @default(now())
+  redemptions       CouponRedemption[]
+
+  @@map("coupons")
+}
+
+model CouponRedemption {
+  id        String   @id @default(uuid()) @db.Uuid
+  couponId  String   @db.Uuid
+  orderId   String   @unique @db.Uuid
+  email     String
+  createdAt DateTime @default(now())
+  coupon    Coupon   @relation(fields: [couponId], references: [id], onDelete: Restrict)
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([couponId, email])
+  @@map("coupon_redemptions")
+}
+
+model ProgressiveTier {
+  minItems Int @id
+  percent  Int
+
+  @@map("progressive_tiers")
+}
+
+// ───────────────────────────── Frete ─────────────────────────────
+
+/// Regras do ManualShippingProvider, por região (lista de UFs).
+model ShippingRegion {
+  id                String   @id @default(uuid()) @db.Uuid
+  name              String
+  ufs               String[]
+  standardCents     Int
+  standardDays      Int
+  expressCents      Int?
+  expressDays       Int?
+  sortOrder         Int      @default(0)
+  active            Boolean  @default(true)
+
+  @@map("shipping_regions")
+}
+
+// ───────────────────────────── Conteúdo e configurações ─────────────────────────────
+
+/// Configurações e conteúdos editáveis (validados com Zod na API):
+/// `shipping` (frete grátis, retirada), `home` (hero, Na campanha, Compre o look, Studio).
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
+
+// ───────────────────────────── Newsletter e idempotência ─────────────────────────────
+
+model NewsletterSubscriber {
+  id             String    @id @default(uuid()) @db.Uuid
+  email          String    @unique
+  source         String    @default("rodape")
+  consentAt      DateTime  @default(now())
+  unsubscribedAt DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@map("newsletter_subscribers")
+}
+
+/// Registro de requisições com `Idempotency-Key`: a 1ª grava, as repetidas recebem a mesma resposta.
+model IdempotencyRecord {
+  key          String    @id
+  scope        String
+  requestHash  String
+  status       Int?
+  response     Json?
+  lockedUntil  DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([createdAt])
+  @@map("idempotency_records")
+}

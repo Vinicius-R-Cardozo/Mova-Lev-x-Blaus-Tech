@@ -1,0 +1,41 @@
+{
+  "name": "@movalev/api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "API REST da loja MOVA LEV (Fastify + Prisma + Supabase)",
+  "type": "module",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "tsx watch --env-file=.env src/server.ts",
+    "build": "prisma generate && tsup",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "db:local": "node scripts/dev-db.mjs",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "tsx --env-file=.env prisma/seed.ts",
+    "db:reset": "prisma migrate reset --force",
+    "postinstall": "prisma generate"
+  },
+  "prisma": {
+    "seed": "tsx --env-file=.env prisma/seed.ts"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.1.0",
+    "@fastify/helmet": "^13.0.2",
+    "@fastify/rate-limit": "^10.3.0",
+    "@movalev/shared": "*",
+    "@prisma/client": "^6.19.3",
+    "@supabase/supabase-js": "^2.81.0",
+    "fastify": "^5.6.1",
+    "jose": "^6.1.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.0",
+    "embedded-postgres": "^17.11.0-beta.19",
+    "prisma": "^6.19.3",
+    "tsup": "^8.5.0",
+    "tsx": "^4.20.6"
+  }
+}

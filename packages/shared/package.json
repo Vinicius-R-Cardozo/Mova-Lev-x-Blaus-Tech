@@ -1,0 +1,27 @@
+{
+  "name": "@movalev/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tipos, schemas Zod e regras de preço compartilhadas entre web e api",
+  "type": "module",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./pricing": "./pricing.ts",
+    "./schemas": "./schemas.ts",
+    "./money": "./money.ts",
+    "./catalog": "./catalog.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.4"
+  }
+}
