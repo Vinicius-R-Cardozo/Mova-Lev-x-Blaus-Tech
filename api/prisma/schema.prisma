@@ -291,6 +291,8 @@ model CartItem {
   cartId    String  @db.Uuid
   variantId String  @db.Uuid
   quantity  Int
+  /// Ordem em que a peça entrou na sacola.
+  position  Int     @default(0)
   cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
   variant   Variant @relation(fields: [variantId], references: [id], onDelete: Cascade)
 

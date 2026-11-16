@@ -43,6 +43,8 @@ funcionam igual; login e upload de fotos exigem um projeto Supabase (local com D
 | `GET /catalog/categories/:slug/products` | grade com filtros `modelo`, `sensacao`, `cor`, `tamanho`, `precoMin`, `precoMax`, `ordem`, `pagina` |
 | `GET /catalog/products/:slug` | produto, cores, estoque por tamanho, Complete o look |
 | `GET /catalog/search?q=` | busca por nome |
+| `POST /cart/quote` | orçamento da sacola: preço, estoque, progressivo, cupom e frete grátis recalculados no servidor |
+| `GET/PUT /cart`, `POST /cart/merge` | sacola da conta (login); o merge usa o maior valor por item, repetir não duplica |
 | `POST /newsletter` | assinatura (exige `Idempotency-Key`, 5/min por IP) |
 | `GET /me` | perfil da cliente logada (JWT do Supabase) |
 

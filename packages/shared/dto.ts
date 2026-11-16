@@ -132,3 +132,31 @@ export interface HomeDTO {
   };
   instagram: { title: string; handle: string; url: string; tiles: { tone: string; caption: string }[] };
 }
+
+/** Linha da sacola com preço e disponibilidade conferidos no servidor. */
+export interface CartLineDTO {
+  variantId: string;
+  productId: string;
+  slug: string;
+  name: string;
+  colorSlug: string;
+  colorName: string;
+  placeholderHex: string;
+  pictogram: Pictogram;
+  imageUrl: string | null;
+  size: Size;
+  unitPriceCents: number;
+  quantity: number;
+  /** Máximo que dá para levar agora (estoque, limitado a 10). 0 = esgotado. */
+  maxQuantity: number;
+}
+
+export interface CartQuoteDTO {
+  lines: CartLineDTO[];
+  /** Itens enviados que não existem mais (produto removido/inativo). */
+  removed: string[];
+  pricing: import("./pricing").PricingResult;
+  tiers: import("./pricing").PricingTier[];
+  /** "Complete com…": 1ª peça recomendada que ainda não está na sacola. */
+  suggestion: ProductCardDTO | null;
+}

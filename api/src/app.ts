@@ -8,6 +8,7 @@ import { healthRoutes } from "./routes/health";
 import { meRoutes } from "./routes/me";
 import { catalogRoutes } from "./routes/catalog";
 import { newsletterRoutes } from "./routes/newsletter";
+import { cartRoutes } from "./routes/cart";
 
 const LOCALHOST = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 
@@ -57,6 +58,7 @@ export async function buildApp() {
   await app.register(meRoutes);
   await app.register(catalogRoutes);
   await app.register(newsletterRoutes);
+  await app.register(cartRoutes);
 
   return app;
 }

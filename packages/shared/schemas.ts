@@ -67,3 +67,13 @@ export const cartItemInputSchema = z.object({
   quantity: z.number().int().min(1).max(20),
 });
 export type CartItemInput = z.infer<typeof cartItemInputSchema>;
+
+export const cartItemsSchema = z.array(cartItemInputSchema).max(50);
+
+export const cartQuoteInputSchema = z.object({
+  items: cartItemsSchema,
+  couponCode: z.string().trim().toUpperCase().max(40).optional(),
+});
+export type CartQuoteInput = z.infer<typeof cartQuoteInputSchema>;
+
+export const cartReplaceSchema = z.object({ items: cartItemsSchema });
