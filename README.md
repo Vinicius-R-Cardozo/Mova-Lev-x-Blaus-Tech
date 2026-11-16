@@ -45,8 +45,14 @@ funcionam igual; login e upload de fotos exigem um projeto Supabase (local com D
 | `GET /catalog/search?q=` | busca por nome |
 | `POST /cart/quote` | orçamento da sacola: preço, estoque, progressivo, cupom e frete grátis recalculados no servidor |
 | `GET/PUT /cart`, `POST /cart/merge` | sacola da conta (login); o merge usa o maior valor por item, repetir não duplica |
+| `POST /checkout/quote` | resumo do checkout com CEP (ViaCEP), opções de frete e total final |
+| `POST /orders` | cria o pedido "Aguardando pagamento" e reserva estoque (exige `Idempotency-Key`, 10/min) |
+| `GET /orders/:id?t=` | confirmação do pedido (token do link ou dona logada) |
+| `POST /payments/webhook/:provider` | aviso do gateway (assinatura validada) |
 | `POST /newsletter` | assinatura (exige `Idempotency-Key`, 5/min por IP) |
 | `GET /me` | perfil da cliente logada (JWT do Supabase) |
+
+Pagamento, frete e e-mail: veja [docs/PAGAMENTO-E-FRETE.md](docs/PAGAMENTO-E-FRETE.md).
 
 ## Supabase
 

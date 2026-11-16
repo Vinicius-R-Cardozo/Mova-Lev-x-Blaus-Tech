@@ -334,6 +334,8 @@ model Order {
   number                   Int            @unique @default(autoincrement())
   /// Mesma chave = mesmo pedido; impede duplicar quando a requisição chega duas vezes.
   idempotencyKey           String         @unique
+  /// Token para a página de confirmação/acompanhamento sem login (visitante).
+  accessToken              String         @unique @default(uuid())
   profileId                String?        @db.Uuid
   profile                  Profile?       @relation(fields: [profileId], references: [id], onDelete: SetNull)
   email                    String
@@ -351,6 +353,9 @@ model Order {
   shippingDays             Int?
   shippingCents            Int
   totalCents               Int
+  /// Desconto de 5% do Pix (já descontado em totalCents).
+  pixDiscountCents         Int            @default(0)
+  installments             Int            @default(1)
   paymentMethod            PaymentMethod
   paymentProvider          String         @default("mock")
   paymentRef               String?

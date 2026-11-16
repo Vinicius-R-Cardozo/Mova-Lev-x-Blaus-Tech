@@ -14,6 +14,9 @@ const schema = z.object({
   SUPABASE_JWT_SECRET: z.string().optional().transform((v) => v || undefined),
   STORAGE_BUCKET: z.string().default("produtos"),
   ORDER_RESERVATION_MINUTES: z.coerce.number().int().min(5).max(7 * 24 * 60).default(60),
+  BOLETO_RESERVATION_HOURS: z.coerce.number().int().min(1).max(240).default(72),
+  /** URL pública da loja (links nos e-mails). */
+  SITE_URL: z.string().url().default("http://localhost:3000"),
 });
 
 const parsed = schema.safeParse(process.env);

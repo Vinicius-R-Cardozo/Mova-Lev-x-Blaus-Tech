@@ -77,3 +77,65 @@ export const cartQuoteInputSchema = z.object({
 export type CartQuoteInput = z.infer<typeof cartQuoteInputSchema>;
 
 export const cartReplaceSchema = z.object({ items: cartItemsSchema });
+
+// ─── Checkout ───────────────────────────────────────────────
+
+function validCpf(cpf: string): boolean {
+  if (!/^\d{11}$/.test(cpf) || /^(\d)\1{10}$/.test(cpf)) return false;
+  const digit = (len: number) => {
+    let sum = 0;
+    for (let i = 0; i < len; i++) sum += Number(cpf[i]) * (len + 1 - i);
+    const r = (sum * 10) % 11;
+    return r === 10 ? 0 : r;
+  };
+  return digit(9) === Number(cpf[9]) && digit(10) === Number(cpf[10]);
+}
+
+export const phoneSchema = z
+  .string()
+  .trim()
+  .transform((v) => v.replace(/\D/g, ""))
+  .pipe(z.string().regex(/^\d{10,11}$/, "Celular com DDD"));
+
+export const cpfSchema = z
+  .string()
+  .trim()
+  .transform((v) => v.replace(/\D/g, ""))
+  .refine(validCpf, "CPF inválido");
+
+export const customerSchema = z.object({
+  email: emailSchema,
+  name: z
+    .string()
+    .trim()
+    .min(3, "Nome completo")
+    .max(120)
+    .refine((v) => v.split(/\s+/).length >= 2, "Nome e sobrenome"),
+  phone: phoneSchema,
+  cpf: cpfSchema.optional(),
+});
+export type CustomerInput = z.infer<typeof customerSchema>;
+
+export const SHIPPING_METHODS = ["PADRAO", "EXPRESSA", "RETIRADA"] as const;
+export const PAYMENT_METHODS = ["PIX", "CARTAO", "BOLETO"] as const;
+
+export const checkoutQuoteInputSchema = z.object({
+  items: z.array(z.object({ variantId: z.string().uuid(), quantity: z.number().int().min(1).max(20) })).max(50),
+  couponCode: z.string().trim().toUpperCase().max(40).optional(),
+  email: emailSchema.optional(),
+  cep: cepSchema.optional(),
+  shippingMethod: z.enum(SHIPPING_METHODS).optional(),
+});
+export type CheckoutQuoteInput = z.infer<typeof checkoutQuoteInputSchema>;
+
+export const orderInputSchema = z
+  .object({
+    customer: customerSchema,
+    items: z.array(z.object({ variantId: z.string().uuid(), quantity: z.number().int().min(1).max(20) })).min(1).max(50),
+    couponCode: z.string().trim().toUpperCase().max(40).optional(),
+    shipping: z.object({ method: z.enum(SHIPPING_METHODS), address: addressSchema.optional() }),
+    payment: z.object({ method: z.enum(PAYMENT_METHODS), installments: z.number().int().min(1).max(6).default(1) }),
+    acceptsNewsletter: z.boolean().optional(),
+  })
+  .refine((o) => o.shipping.method === "RETIRADA" || !!o.shipping.address, { message: "Endereço de entrega obrigatório", path: ["shipping", "address"] });
+export type OrderInput = z.infer<typeof orderInputSchema>;

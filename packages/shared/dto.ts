@@ -160,3 +160,52 @@ export interface CartQuoteDTO {
   /** "Complete com…": 1ª peça recomendada que ainda não está na sacola. */
   suggestion: ProductCardDTO | null;
 }
+
+export interface ShippingOptionDTO {
+  id: "PADRAO" | "EXPRESSA" | "RETIRADA";
+  label: string;
+  days: number;
+  description: string;
+  /** Preço cheio do método. */
+  cents: number;
+  /** O que a cliente paga com este método (0 = grátis). */
+  finalCents: number;
+}
+
+export interface CheckoutQuoteDTO extends CartQuoteDTO {
+  address: { street: string; district: string; city: string; uf: string } | null;
+  shippingOptions: ShippingOptionDTO[];
+  shippingMethod: ShippingOptionDTO["id"] | null;
+}
+
+export interface OrderDTO {
+  id: string;
+  number: number;
+  status: import("./catalog").OrderStatus;
+  createdAt: string;
+  expiresAt: string;
+  email: string;
+  customerName: string;
+  items: { productName: string; colorName: string; size: Size; quantity: number; unitPriceCents: number; sku: string }[];
+  subtotalCents: number;
+  progressivePercent: number;
+  progressiveDiscountCents: number;
+  couponCode: string | null;
+  couponDiscountCents: number;
+  shippingLabel: string;
+  shippingDays: number | null;
+  shippingCents: number;
+  pixDiscountCents: number;
+  totalCents: number;
+  installments: number;
+  paymentMethod: "PIX" | "CARTAO" | "BOLETO";
+  payment: Record<string, unknown> | null;
+  shippingAddress: Record<string, string> | null;
+  trackingCode: string | null;
+}
+
+export interface OrderCreatedDTO {
+  id: string;
+  number: number;
+  accessToken: string;
+}

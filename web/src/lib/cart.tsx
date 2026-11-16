@@ -24,6 +24,8 @@ interface CartState {
   add: (lines: Omit<CartLine, "quantity">[], opts?: { open?: boolean }) => void;
   remove: (variantId: string) => void;
   setQuantity: (variantId: string, quantity: number) => void;
+  /** Esvazia a sacola (após o pedido ser criado). */
+  clear: () => void;
   open: () => void;
   close: () => void;
 }
@@ -185,6 +187,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       add,
       remove,
       setQuantity,
+      clear: () => setLines([]),
       open: () => setOpen(true),
       close: () => setOpen(false),
     }),
