@@ -3,13 +3,11 @@
 ## 1. Para publicar (fase 7) — depende de você
 - [x] **GitHub:** código enviado para github.com/Vinicius-R-Cardozo/Mova-Lev-x-Blaus-Tech (público).
 - [x] **Vercel:** loja publicada em **https://mova-lev.vercel.app** (projeto `mova-lev`, raiz `web`, ligado ao GitHub — cada push na `main` publica). Supabase Auth já aponta para esse endereço.
-- [ ] **Render:** criar a conta entrando com o GitHub → **New → Blueprint** → repositório `Mova-Lev-x-Blaus-Tech` → preencher:
-  - `DATABASE_URL`, `DIRECT_URL`, `SUPABASE_SERVICE_ROLE_KEY`: copiar as linhas de mesmo nome do `api/.env`;
-  - `REVALIDATE_SECRET`: copiar do arquivo `.env.render.local` (raiz do projeto);
-  - `SITE_URL` e `CORS_ORIGINS`: `https://mova-lev.vercel.app`;
-  - `WEB_REVALIDATE_URL`: `https://mova-lev.vercel.app/api/revalidate`;
-  - `ADMIN_EMAILS`: seu e-mail; `RESEND_API_KEY` e `STORE_EMAIL`: deixar vazios por enquanto.
-- [ ] Me passar a URL que o Render der para a API → eu ajusto `NEXT_PUBLIC_API_URL` na Vercel (hoje: `https://movalev-api.onrender.com`) e publico de novo. Até lá, Home e categorias dão erro (sem API).
+- [x] **Render:** API no ar em **https://mova-lev-x-blaus-tech.onrender.com** (plano Free, região Oregon). Loja apontando para ela.
+- [ ] **Render não publica sozinho após o push** (Auto-Deploy “On Commit”, mas nenhum deploy automático aconteceu). Corrigir: GitHub → Settings → Applications → Installed GitHub Apps → **Render → Configure** → dar acesso ao repositório `Mova-Lev-x-Blaus-Tech`. Até lá: **Manual Deploy → Deploy latest commit** a cada mudança na API.
+- [ ] **`DATABASE_URL` no Render ainda está no modo transação (porta 6543).** A API contorna sozinha usando a `DIRECT_URL` (modo sessão), mas o certo é corrigir o valor em Environment (deve terminar em `:5432/postgres?connection_limit=5`).
+- [ ] (Opcional) Recriar a API na região **Virginia**: ~120 ms por ida e volta ao banco em vez de ~180 ms (Oregon). O Render não tem região no Brasil.
+- [ ] Plano Free do Render: a API dorme após 15 min sem uso e a 1ª visita depois disso espera ~50 s. Para vender, plano **Starter** (US$ 7/mês).
 - [ ] **Domínio:** quando registrar, me passe o nome e o acesso ao DNS → eu ligo HTTPS, `www` → raiz, login por e-mail e sitemap.
 
 ## 2. Contas e chaves para criar (quando puder)

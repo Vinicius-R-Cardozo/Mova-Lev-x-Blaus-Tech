@@ -55,6 +55,16 @@ No `render.yaml`: `plan: starter`, tire `npm run db:deploy` do `buildCommand` e 
     envVars: # DATABASE_URL, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SITE_URL, NODE_ENV=production
 ```
 
+### Desempenho: o que aprendemos no primeiro deploy
+
+- A API no Render (EUA) fica a **~180 ms** de ida e volta do banco (São Paulo). Por isso:
+  - use o pooler em **modo sessão (5432)**: o modo transação (6543) fazia ~5 idas e voltas por consulta (875 ms).
+    A API usa a `DIRECT_URL` automaticamente se a `DATABASE_URL` vier em 6543;
+  - o Prisma usa `relationJoins` (relações numa consulta só) e o catálogo tem cache de 60 s em memória.
+- Resultado medido: consulta 875 → 179 ms; páginas da loja de 5–6 s para 0,25–0,5 s.
+- Se o **Auto-Deploy** não disparar após o push, dê acesso ao repositório no app do Render no GitHub
+  (Settings → Applications → Render → Configure).
+
 ## 3. Loja na Vercel
 
 1. Vercel → **Add New → Project** → mesmo repositório → **Root Directory: `web`** (framework Next.js é detectado; a instalação roda na raiz do monorepo).
