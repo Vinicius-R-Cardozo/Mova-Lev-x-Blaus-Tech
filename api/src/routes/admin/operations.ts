@@ -230,6 +230,7 @@ export async function adminOperationsRoutes(app: FastifyInstance) {
       prisma.shippingRegion.deleteMany({}),
       prisma.shippingRegion.createMany({ data: input.regions.map((r, i) => ({ ...r, sortOrder: i })) }),
     ]);
+    revalidateStore(["catalog", "home"]);
     return input;
   });
 

@@ -3,15 +3,22 @@ import { DEFAULT_TIERS, shippingSettingsSchema } from "@movalev/shared";
 import { prisma } from "./prisma";
 import { publicImageUrl } from "./supabase";
 import { cardInclude, toCard } from "./catalog";
+import { cached } from "./cache";
 
 export const MAX_PER_LINE = 10;
 
-export async function loadTiers(): Promise<PricingTier[]> {
-  const rows = await prisma.progressiveTier.findMany({ orderBy: { minItems: "asc" } });
-  return rows.length ? rows.map((r) => ({ minItems: r.minItems, percent: r.percent })) : DEFAULT_TIERS;
+export function loadTiers(): Promise<PricingTier[]> {
+  return cached("regras:tiers", 60_000, async () => {
+    const rows = await prisma.progressiveTier.findMany({ orderBy: { minItems: "asc" } });
+    return rows.length ? rows.map((r) => ({ minItems: r.minItems, percent: r.percent })) : DEFAULT_TIERS;
+  });
 }
 
-export async function loadShippingSettings(): Promise<ShippingSettings> {
+export function loadShippingSettings(): Promise<ShippingSettings> {
+  return cached("regras:frete", 60_000, () => readShippingSettings());
+}
+
+async function readShippingSettings(): Promise<ShippingSettings> {
   const row = await prisma.setting.findUnique({ where: { key: "shipping" } });
   return shippingSettingsSchema.parse(row?.value ?? { freeShippingThresholdCents: 29900, pickup: { enabled: false, label: "Retirar na loja", address: "", days: 1 } });
 }

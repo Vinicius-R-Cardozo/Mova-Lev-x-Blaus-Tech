@@ -5,6 +5,9 @@
 generator client {
   provider        = "prisma-client-js"
   binaryTargets   = ["native", "debian-openssl-3.0.x"]
+  // Relações carregadas com JOIN numa consulta só (em vez de 1 consulta por relação):
+  // decisivo com a API longe do banco (~180 ms por ida e volta).
+  previewFeatures = ["relationJoins"]
 }
 
 datasource db {

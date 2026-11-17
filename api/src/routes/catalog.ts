@@ -14,6 +14,9 @@ import {
 } from "@movalev/shared";
 import { prisma } from "../lib/prisma";
 import { cardInclude, toCard, toColor, toImage, toSizes, type CardProduct } from "../lib/catalog";
+import { responseCache } from "../lib/cache";
+
+const CATALOG_TTL_MS = 60_000;
 
 /** Categoria virtual com todas as peças, ordenadas pelas mais novas. */
 const NOVIDADES: CategoryDTO = {
@@ -68,6 +71,22 @@ async function cardsBySlugs(refs: { productSlug: string; colorSlug: string }[]) 
 }
 
 export async function catalogRoutes(app: FastifyInstance) {
+  // Respostas do catálogo ficam 60 s em memória (limpas na hora quando o admin altera algo).
+  app.addHook("onRequest", async (req, reply) => {
+    if (req.method !== "GET") return;
+    const hit = responseCache.get(`catalog:${req.url}`, CATALOG_TTL_MS);
+    if (!hit) return;
+    cache(reply, 60);
+    return reply.header("X-Cache", "HIT").type(hit.type).send(hit.body);
+  });
+  app.addHook("onSend", async (req, reply, payload) => {
+    if (req.method === "GET" && reply.statusCode === 200 && typeof payload === "string" && !reply.getHeader("X-Cache")) {
+      responseCache.set(`catalog:${req.url}`, payload, String(reply.getHeader("content-type") ?? "application/json"));
+      reply.header("X-Cache", "MISS");
+    }
+    return payload;
+  });
+
   // ── Categorias (menu, atalhos, rodapé) ──
   app.get("/catalog/categories", async (_req, reply) => {
     const rows = await prisma.category.findMany({ orderBy: { sortOrder: "asc" } });
