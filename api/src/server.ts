@@ -17,12 +17,14 @@ await app.listen({ port: env.PORT, host: env.HOST });
 
 // Alternativa ao Cron Job do Render: EXPIRE_ORDERS_INTERVAL_MINUTES=5 roda a expiração na própria API.
 // Seguro com várias instâncias: cada pedido só é liberado uma vez (update condicional).
+// No plano Free a API hiberna; por isso também roda ao acordar, liberando o que venceu enquanto dormia.
 const every = Number(process.env.EXPIRE_ORDERS_INTERVAL_MINUTES ?? 0);
 if (every > 0) {
   const { releaseExpiredOrders } = await import("./lib/orders");
-  setInterval(() => {
+  const run = () =>
     releaseExpiredOrders()
       .then((n) => n && app.log.info(`[expire-orders] ${n} pedido(s) cancelado(s)`))
       .catch((err) => app.log.error({ err }, "[expire-orders] falhou"));
-  }, every * 60_000).unref();
+  void run();
+  setInterval(run, every * 60_000).unref();
 }

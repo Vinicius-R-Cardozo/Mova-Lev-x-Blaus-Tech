@@ -8,37 +8,52 @@ Navegador ──► Vercel (loja Next.js, região iad1) ──► Render (API Fa
 
 ## 1. Repositório
 
-O Render publica a partir do GitHub. Crie um repositório **privado** e envie o código:
+O código está em **github.com/Vinicius-R-Cardozo/Mova-Lev-x-Blaus-Tech** (branch `main`). Cada push na `main`
+publica de novo a API (Render) e a loja (Vercel).
 
-```bash
-gh auth login
-gh repo create movalev --private --source . --push
-```
+## 2. API no Render — plano Free (atual)
 
-## 2. API no Render (Blueprint)
-
-1. Render → **New → Blueprint** → escolha o repositório. O `render.yaml` cria:
-   - `movalev-api` (Web Service, plano Starter, health check em `/health`, migrações no pre-deploy);
-   - `movalev-expirar-pedidos` (Cron Job a cada 5 min — cancela pedidos sem pagamento e devolve o estoque).
-2. Preencha os segredos pedidos (`sync: false`):
+1. Entre em render.com com o GitHub e autorize o repositório.
+2. **New → Blueprint** → escolha o repositório. O `render.yaml` cria o serviço `movalev-api`:
+   - plano **Free**, região Virginia, health check em `/health`;
+   - build instala, compila a API e aplica as migrações (`prisma migrate deploy`);
+   - expiração de pedidos **dentro da API** a cada 5 min e ao acordar (`EXPIRE_ORDERS_INTERVAL_MINUTES=5`).
+3. Preencha os segredos pedidos (`sync: false`):
 
 | Variável | Valor |
 |---|---|
-| `DATABASE_URL` | pooler do Supabase **porta 6543** + `?pgbouncer=true&connection_limit=5` |
-| `DIRECT_URL` | pooler **porta 5432** (migrações) |
+| `DATABASE_URL` | pooler do Supabase **porta 6543** + `?pgbouncer=true&connection_limit=5` (o mesmo do `api/.env`) |
+| `DIRECT_URL` | pooler **porta 5432** (migrações; o mesmo do `api/.env`) |
 | `SUPABASE_SERVICE_ROLE_KEY` | chave `service_role` **legada** (JWT) — a `sb_secret_` é recusada pelo Storage |
-| `SITE_URL` | `https://SEU-DOMINIO` |
-| `CORS_ORIGINS` | `https://SEU-DOMINIO,https://www.SEU-DOMINIO` |
-| `WEB_REVALIDATE_URL` | `https://SEU-DOMINIO/api/revalidate` |
+| `SITE_URL` | URL da loja na Vercel (depois, o domínio) |
+| `CORS_ORIGINS` | URL da loja na Vercel (depois: `https://SEU-DOMINIO,https://www.SEU-DOMINIO`) |
+| `WEB_REVALIDATE_URL` | `<URL da loja>/api/revalidate` |
 | `REVALIDATE_SECRET` | segredo longo (o mesmo da Vercel) |
-| `RESEND_API_KEY` / `EMAIL_FROM` | e-mail transacional (domínio verificado no Resend) |
-| `STORE_EMAIL` | caixa que recebe o formulário de contato |
+| `RESEND_API_KEY` | vazio por enquanto (sem Resend, os e-mails ficam só no log) |
+| `STORE_EMAIL` | caixa que recebe o formulário de contato (pode ficar vazio) |
 | `ADMIN_EMAILS` | e-mails que viram admin ao rodar o seed |
 
-3. Anote a URL da API (ex.: `https://movalev-api.onrender.com`) — e, se quiser, crie `api.SEU-DOMINIO` em **Settings → Custom Domains**.
+4. Anote a URL da API (ex.: `https://movalev-api.onrender.com`).
 
-**Sem Cron Job (plano free):** apague o serviço `cron` do blueprint e defina `EXPIRE_ORDERS_INTERVAL_MINUTES=5` na API.
-O plano free hiberna após 15 min sem acesso (primeira chamada leva ~50 s) — não recomendado para a loja em produção.
+**Limites do Free:** a API hiberna após 15 min sem acesso e a primeira chamada depois disso leva ~50 s;
+750 h/mês de instância. Serve para homologação, não para vender.
+
+### Subir para o plano pago (produção)
+
+No `render.yaml`: `plan: starter`, tire `npm run db:deploy` do `buildCommand` e use
+`preDeployCommand: npm run db:deploy -w @movalev/api`; remova `EXPIRE_ORDERS_INTERVAL_MINUTES` e adicione o Cron Job:
+
+```yaml
+  - type: cron
+    name: movalev-expirar-pedidos
+    runtime: node
+    region: virginia
+    plan: starter
+    schedule: "*/5 * * * *"
+    buildCommand: npm ci --include=dev && npm run build -w @movalev/api
+    startCommand: node api/dist/jobs/expire-orders.js
+    envVars: # DATABASE_URL, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SITE_URL, NODE_ENV=production
+```
 
 ## 3. Loja na Vercel
 

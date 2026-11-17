@@ -1,7 +1,7 @@
 # MOVA LEV — o que falta (17/11/2026)
 
 ## 1. Para publicar (fase 7) — depende de você
-- [ ] **GitHub:** rodar `gh auth login` neste computador (eu crio o repositório privado e envio o código).
+- [x] **GitHub:** código enviado para github.com/Vinicius-R-Cardozo/Mova-Lev-x-Blaus-Tech (público).
 - [ ] **Render:** criar conta entrando com o GitHub (plano **Free** por enquanto, como combinado).
 - [ ] Me avisar quando os dois estiverem prontos → eu publico a API no Render e a loja na Vercel (Hobby, endereços provisórios `*.onrender.com` e `*.vercel.app`).
 - [ ] **Domínio:** quando registrar, me passe o nome e o acesso ao DNS → eu ligo HTTPS, `www` → raiz, login por e-mail e sitemap.
