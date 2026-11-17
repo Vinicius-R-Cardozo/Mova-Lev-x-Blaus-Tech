@@ -2,8 +2,14 @@
 
 ## 1. Para publicar (fase 7) — depende de você
 - [x] **GitHub:** código enviado para github.com/Vinicius-R-Cardozo/Mova-Lev-x-Blaus-Tech (público).
-- [ ] **Render:** criar conta entrando com o GitHub (plano **Free** por enquanto, como combinado).
-- [ ] Me avisar quando os dois estiverem prontos → eu publico a API no Render e a loja na Vercel (Hobby, endereços provisórios `*.onrender.com` e `*.vercel.app`).
+- [x] **Vercel:** loja publicada em **https://mova-lev.vercel.app** (projeto `mova-lev`, raiz `web`, ligado ao GitHub — cada push na `main` publica). Supabase Auth já aponta para esse endereço.
+- [ ] **Render:** criar a conta entrando com o GitHub → **New → Blueprint** → repositório `Mova-Lev-x-Blaus-Tech` → preencher:
+  - `DATABASE_URL`, `DIRECT_URL`, `SUPABASE_SERVICE_ROLE_KEY`: copiar as linhas de mesmo nome do `api/.env`;
+  - `REVALIDATE_SECRET`: copiar do arquivo `.env.render.local` (raiz do projeto);
+  - `SITE_URL` e `CORS_ORIGINS`: `https://mova-lev.vercel.app`;
+  - `WEB_REVALIDATE_URL`: `https://mova-lev.vercel.app/api/revalidate`;
+  - `ADMIN_EMAILS`: seu e-mail; `RESEND_API_KEY` e `STORE_EMAIL`: deixar vazios por enquanto.
+- [ ] Me passar a URL que o Render der para a API → eu ajusto `NEXT_PUBLIC_API_URL` na Vercel (hoje: `https://movalev-api.onrender.com`) e publico de novo. Até lá, Home e categorias dão erro (sem API).
 - [ ] **Domínio:** quando registrar, me passe o nome e o acesso ao DNS → eu ligo HTTPS, `www` → raiz, login por e-mail e sitemap.
 
 ## 2. Contas e chaves para criar (quando puder)
