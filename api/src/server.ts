@@ -14,3 +14,15 @@ process.on("SIGTERM", () => void shutdown("SIGTERM"));
 process.on("SIGINT", () => void shutdown("SIGINT"));
 
 await app.listen({ port: env.PORT, host: env.HOST });
+
+// Alternativa ao Cron Job do Render: EXPIRE_ORDERS_INTERVAL_MINUTES=5 roda a expiração na própria API.
+// Seguro com várias instâncias: cada pedido só é liberado uma vez (update condicional).
+const every = Number(process.env.EXPIRE_ORDERS_INTERVAL_MINUTES ?? 0);
+if (every > 0) {
+  const { releaseExpiredOrders } = await import("./lib/orders");
+  setInterval(() => {
+    releaseExpiredOrders()
+      .then((n) => n && app.log.info(`[expire-orders] ${n} pedido(s) cancelado(s)`))
+      .catch((err) => app.log.error({ err }, "[expire-orders] falhou"));
+  }, every * 60_000).unref();
+}

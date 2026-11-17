@@ -1,0 +1,73 @@
+# Blueprint do Render: API (Web Service) + job de expiração de pedidos (Cron Job).
+# Render → New → Blueprint → aponte para este repositório. Segredos marcados com
+# `sync: false` são pedidos na criação (valores em docs/DEPLOY.md).
+services:
+  - type: web
+    name: movalev-api
+    runtime: node
+    region: virginia          # mais perto do Supabase (São Paulo) entre as regiões do Render
+    plan: starter             # sempre ligado; o free hiberna e demora ~50 s para acordar
+    branch: main
+    buildCommand: npm ci --include=dev && npm run build -w @movalev/api
+    preDeployCommand: npm run db:deploy -w @movalev/api   # aplica migrações do Prisma antes de trocar a versão
+    startCommand: node api/dist/server.js
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: CORS_ORIGINS
+        sync: false            # https://SEU-DOMINIO,https://www.SEU-DOMINIO
+      - key: SITE_URL
+        sync: false            # https://SEU-DOMINIO
+      - key: DATABASE_URL
+        sync: false            # pooler do Supabase, porta 6543, ?pgbouncer=true&connection_limit=5
+      - key: DIRECT_URL
+        sync: false            # pooler em modo sessão, porta 5432 (migrações)
+      - key: SUPABASE_URL
+        value: https://cxmkuqkhvdhwvrdkzckk.supabase.co
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: STORAGE_BUCKET
+        value: produtos
+      - key: ORDER_RESERVATION_MINUTES
+        value: "60"
+      - key: BOLETO_RESERVATION_HOURS
+        value: "72"
+      - key: WEB_REVALIDATE_URL
+        sync: false            # https://SEU-DOMINIO/api/revalidate
+      - key: REVALIDATE_SECRET
+        sync: false            # mesmo valor da Vercel
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: MOVA LEV <pedidos@SEU-DOMINIO>
+      - key: STORE_EMAIL
+        sync: false
+      - key: ADMIN_EMAILS
+        sync: false
+
+  - type: cron
+    name: movalev-expirar-pedidos
+    runtime: node
+    region: virginia
+    plan: starter
+    schedule: "*/5 * * * *"   # a cada 5 minutos
+    branch: main
+    buildCommand: npm ci --include=dev && npm run build -w @movalev/api
+    startCommand: node api/dist/jobs/expire-orders.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        value: https://cxmkuqkhvdhwvrdkzckk.supabase.co
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SITE_URL
+        sync: false

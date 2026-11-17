@@ -68,6 +68,13 @@ const nextConfig = {
       },
     ],
   },
+  async redirects() {
+    // www.dominio → dominio (308), derivado de NEXT_PUBLIC_SITE_URL.
+    const site = origin(process.env.NEXT_PUBLIC_SITE_URL, "");
+    const host = site ? new URL(site).hostname : "";
+    if (!host || host === "localhost" || host.startsWith("www.")) return [];
+    return [{ source: "/:path*", has: [{ type: "host", value: `www.${host}` }], destination: `${site}/:path*`, permanent: true }];
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
