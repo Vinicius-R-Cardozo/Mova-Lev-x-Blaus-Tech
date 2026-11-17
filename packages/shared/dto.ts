@@ -209,3 +209,38 @@ export interface OrderCreatedDTO {
   number: number;
   accessToken: string;
 }
+
+export interface ProfileDTO {
+  id: string;
+  email: string;
+  name: string | null;
+  phone: string | null;
+  cpf: string | null;
+  role: "CUSTOMER" | "ADMIN";
+  createdAt: string;
+}
+
+export interface OrderSummaryDTO {
+  id: string;
+  number: number;
+  status: import("./catalog").OrderStatus;
+  createdAt: string;
+  totalCents: number;
+  pieces: number;
+  paymentMethod: "PIX" | "CARTAO" | "BOLETO";
+  trackingCode: string | null;
+}
+
+export interface AddressDTO {
+  id: string;
+  label: string | null;
+  recipient: string | null;
+  cep: string;
+  street: string;
+  number: string;
+  complement: string | null;
+  district: string;
+  city: string;
+  uf: string;
+  isDefault: boolean;
+}

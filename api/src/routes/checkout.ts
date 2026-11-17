@@ -70,7 +70,10 @@ export async function checkoutRoutes(app: FastifyInstance) {
     const id = z.string().uuid().parse(req.params.id);
     const token = z.string().uuid().optional().parse(req.query.t || undefined);
     const order = await prisma.order.findUnique({ where: { id }, include: { items: true } });
-    const allowed = order && ((token && order.accessToken === token) || (req.user && (req.user.id === order.profileId || req.user.role === "ADMIN")));
+    const allowed =
+      order &&
+      ((token && order.accessToken === token) ||
+        (req.user && (req.user.id === order.profileId || order.email === req.user.email || req.user.role === "ADMIN")));
     if (!order || !allowed) return reply.code(404).send({ error: "nao_encontrado", message: "Pedido não encontrado." });
     reply.header("Cache-Control", "private, no-store");
     return toOrderDTO(order);

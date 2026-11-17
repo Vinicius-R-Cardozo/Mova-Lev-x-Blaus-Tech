@@ -67,8 +67,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     let unsubscribe: (() => void) | undefined;
     let cancelled = false;
     // Carregado depois da hidratação: o SDK do Supabase não pesa no primeiro carregamento.
-    void import("./supabase").then(({ supabaseBrowser }) => {
-      const supabase = supabaseBrowser();
+    void import("./auth").then(({ getSupabase }) => getSupabase()).then((supabase) => {
       if (!supabase || cancelled) return;
       const { data } = supabase.auth.onAuthStateChange((event, session) => {
         tokenRef.current = session?.access_token ?? null;

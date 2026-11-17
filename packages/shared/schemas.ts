@@ -139,3 +139,20 @@ export const orderInputSchema = z
   })
   .refine((o) => o.shipping.method === "RETIRADA" || !!o.shipping.address, { message: "Endereço de entrega obrigatório", path: ["shipping", "address"] });
 export type OrderInput = z.infer<typeof orderInputSchema>;
+
+// ─── Conta ──────────────────────────────────────────────────
+
+export const profileUpdateSchema = z.object({
+  name: z.string().trim().min(3).max(120).optional(),
+  phone: phoneSchema.optional().or(z.literal("").transform(() => undefined)),
+  cpf: cpfSchema.optional().or(z.literal("").transform(() => undefined)),
+});
+
+export const accountAddressSchema = addressSchema.extend({
+  label: z.string().trim().max(40).optional(),
+  recipient: z.string().trim().max(120).optional(),
+  isDefault: z.boolean().optional(),
+});
+export type AccountAddressInput = z.infer<typeof accountAddressSchema>;
+
+export const favoritesMergeSchema = z.object({ productIds: z.array(z.string().uuid()).max(200) });

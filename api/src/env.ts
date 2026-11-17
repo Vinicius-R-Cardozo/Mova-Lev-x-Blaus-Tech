@@ -17,6 +17,9 @@ const schema = z.object({
   BOLETO_RESERVATION_HOURS: z.coerce.number().int().min(1).max(240).default(72),
   /** URL pública da loja (links nos e-mails). */
   SITE_URL: z.string().url().default("http://localhost:3000"),
+  /** Rota de revalidação da loja (ex.: https://movalev.com.br/api/revalidate) e segredo compartilhado. */
+  WEB_REVALIDATE_URL: z.string().url().optional().or(z.literal("").transform(() => undefined)),
+  REVALIDATE_SECRET: z.string().min(24).optional().or(z.literal("").transform(() => undefined)),
 });
 
 const parsed = schema.safeParse(process.env);

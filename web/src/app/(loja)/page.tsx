@@ -9,6 +9,9 @@ import { Sensations } from "@/components/home/Sensations";
 import { Studio } from "@/components/home/Studio";
 import { InstagramGrid } from "@/components/home/InstagramGrid";
 
+// Renderizada por requisição (o build não depende da API); os dados ficam em cache por 60 s.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: { absolute: "MOVA LEV · Movimento é vida — moda fitness feminina" },
   alternates: { canonical: "/" },

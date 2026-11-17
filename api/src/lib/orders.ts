@@ -199,13 +199,19 @@ export async function sendConfirmationEmail(orderId: string, opts: { force?: boo
 }
 
 /**
- * Cancela um pedido aguardando pagamento e devolve o estoque — uma única vez,
- * mesmo com várias instâncias/execuções do job ao mesmo tempo (update condicional).
+ * Cancela o pedido e devolve estoque e cupom — uma única vez, mesmo com várias
+ * instâncias ou execuções do job ao mesmo tempo (update condicional).
+ * `from` limita de quais status pode cancelar (o job só cancela "Aguardando pagamento").
  */
-export async function releaseOrder(orderId: string, reason: string, actor = "sistema"): Promise<boolean> {
+export async function cancelOrder(
+  orderId: string,
+  reason: string,
+  actor = "sistema",
+  from: ("AGUARDANDO_PAGAMENTO" | "PAGO" | "EM_SEPARACAO")[] = ["AGUARDANDO_PAGAMENTO", "PAGO", "EM_SEPARACAO"],
+): Promise<boolean> {
   return prisma.$transaction(async (tx) => {
     const claimed = await tx.order.updateMany({
-      where: { id: orderId, status: "AGUARDANDO_PAGAMENTO", stockReleasedAt: null },
+      where: { id: orderId, status: { in: from }, stockReleasedAt: null },
       data: { status: "CANCELADO", stockReleasedAt: new Date() },
     });
     if (claimed.count === 0) return false;
@@ -220,6 +226,9 @@ export async function releaseOrder(orderId: string, reason: string, actor = "sis
     return true;
   });
 }
+
+/** Libera só pedidos ainda aguardando pagamento (job de expiração e webhook). */
+export const releaseOrder = (orderId: string, reason: string, actor = "sistema") => cancelOrder(orderId, reason, actor, ["AGUARDANDO_PAGAMENTO"]);
 
 export async function releaseExpiredOrders(): Promise<number> {
   const expired = await prisma.order.findMany({

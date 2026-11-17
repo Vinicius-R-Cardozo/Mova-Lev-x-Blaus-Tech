@@ -13,7 +13,8 @@
     "./money": "./money.ts",
     "./catalog": "./catalog.ts",
     "./dto": "./dto.ts",
-    "./content": "./content.ts"
+    "./content": "./content.ts",
+    "./admin": "./admin.ts"
   },
   "scripts": {
     "test": "vitest run",

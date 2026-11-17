@@ -390,3 +390,12 @@ enabled = false
 client_id = "env(SUPABASE_AUTH_GOOGLE_CLIENT_ID)"
 secret = "env(SUPABASE_AUTH_GOOGLE_SECRET)"
 skip_nonce_check = true
+
+# E-mails de acesso com link por token_hash (abre em qualquer navegador/dispositivo).
+[auth.email.template.magic_link]
+subject = "Seu link de acesso · MOVA LEV"
+content_path = "./supabase/templates/magic_link.html"
+
+[auth.email.template.confirmation]
+subject = "Confirme seu e-mail · MOVA LEV"
+content_path = "./supabase/templates/confirmation.html"

@@ -50,9 +50,17 @@ funcionam igual; login e upload de fotos exigem um projeto Supabase (local com D
 | `GET /orders/:id?t=` | confirmação do pedido (token do link ou dona logada) |
 | `POST /payments/webhook/:provider` | aviso do gateway (assinatura validada) |
 | `POST /newsletter` | assinatura (exige `Idempotency-Key`, 5/min por IP) |
-| `GET /me` | perfil da cliente logada (JWT do Supabase) |
+| `GET/PATCH /me`, `/me/orders`, `/me/addresses`, `/me/favorites` | área do cliente (JWT do Supabase) |
+| `/admin/*` | painel: produtos, variantes, fotos, pedidos, cupons, regras, Home, newsletter (papel ADMIN) |
 
 Pagamento, frete e e-mail: veja [docs/PAGAMENTO-E-FRETE.md](docs/PAGAMENTO-E-FRETE.md).
+
+## Área do cliente e admin
+
+- `/conta`: login sem senha (link mágico) ou Google; pedidos (inclusive os feitos como visitante com o mesmo e-mail), endereços, favoritos e dados.
+- `/admin`: só para perfis com papel `ADMIN`. Para virar admin: coloque o e-mail em `ADMIN_EMAILS` (api/.env), entre uma vez na loja e rode `npm run db:seed`.
+- Google: crie o OAuth client no Google Cloud, ative em `[auth.external.google]` do `supabase/config.toml` e defina `NEXT_PUBLIC_AUTH_GOOGLE=true` na loja.
+- Mudanças no admin atualizam o cache da loja na hora (`/api/revalidate`, segredo `REVALIDATE_SECRET` igual na API e na loja).
 
 ## Supabase
 

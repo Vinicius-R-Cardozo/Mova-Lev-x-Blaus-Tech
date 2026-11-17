@@ -8,12 +8,14 @@ import {
   customerSchema,
   formatBRL,
   installmentCents,
+  type AddressDTO,
   type CheckoutQuoteDTO,
   type OrderCreatedDTO,
   type OrderInput,
 } from "@movalev/shared";
 import { useCart } from "@/lib/cart";
-import { ApiError, post } from "@/lib/api";
+import { ApiError } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import { API_URL } from "@/lib/site";
 import { cn } from "@/lib/cn";
 import { CheckoutSteps } from "./CheckoutSteps";
@@ -72,6 +74,7 @@ async function idempotencyKeyFor(body: unknown) {
 
 export function CheckoutFlow() {
   const cart = useCart();
+  const auth = useAuth();
   const router = useRouter();
   const [step, setStep] = useState<Step>(1);
   const [customer, setCustomer] = useState({ email: "", name: "", phone: "", cpf: "" });
@@ -88,6 +91,29 @@ export function CheckoutFlow() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const filledCep = useRef<string>("");
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const prefilled = useRef(false);
+
+  // Logada: preenche dados e o endereço principal (uma vez, sem sobrescrever o que já foi digitado).
+  useEffect(() => {
+    if (!auth.profile || prefilled.current) return;
+    prefilled.current = true;
+    const p = auth.profile;
+    setCustomer((c) => ({
+      email: c.email || p.email,
+      name: c.name || p.name || "",
+      phone: c.phone || (p.phone ? maskPhone(p.phone) : ""),
+      cpf: c.cpf || (p.cpf ? maskCpf(p.cpf) : ""),
+    }));
+    auth
+      .apiFetch<AddressDTO[]>("/me/addresses")
+      .then((list) => {
+        const a = list.find((x) => x.isDefault) ?? list[0];
+        if (!a) return;
+        filledCep.current = a.cep;
+        setAddress((cur) => (cur.cep ? cur : { cep: maskCep(a.cep), street: a.street, number: a.number, complement: a.complement ?? "", district: a.district, city: a.city, uf: a.uf }));
+      })
+      .catch(() => undefined);
+  }, [auth.profile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const cep = onlyDigits(address.cep);
   const emailOk = customerSchema.shape.email.safeParse(customer.email).success;
@@ -103,7 +129,7 @@ export function CheckoutFlow() {
       try {
         const res = await fetch(`${API_URL}/checkout/quote`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...(auth.session ? { Authorization: `Bearer ${auth.session.access_token}` } : {}) },
           body: JSON.stringify({
             items,
             couponCode: coupon || undefined,
@@ -194,7 +220,7 @@ export function CheckoutFlow() {
     const key = await idempotencyKeyFor(body);
     for (let attempt = 0; attempt < 4; attempt++) {
       try {
-        const created = await post<OrderCreatedDTO>("/orders", body, key);
+        const created = await auth.apiFetch<OrderCreatedDTO>("/orders", { method: "POST", body: JSON.stringify(body), idempotencyKey: key });
         cart.clear();
         router.replace(`/checkout/confirmacao/${created.id}?t=${created.accessToken}`);
         return;
@@ -285,9 +311,11 @@ export function CheckoutFlow() {
               </h1>
               <p className="mt-2 text-[15px] font-light text-texto-2">
                 Usamos seu e-mail para enviar a confirmação e o acompanhamento do pedido.{" "}
-                <Link href="/conta" className="font-normal text-texto underline decoration-1 underline-offset-4">
-                  Já tem conta? Entrar
-                </Link>
+                {!auth.session && (
+                  <Link href="/conta?next=/checkout" className="font-normal text-texto underline decoration-1 underline-offset-4">
+                    Já tem conta? Entrar
+                  </Link>
+                )}
               </p>
               <div className="mt-7 grid gap-5 md:grid-cols-2">
                 <Field
