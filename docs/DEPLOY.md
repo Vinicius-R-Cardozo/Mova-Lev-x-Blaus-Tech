@@ -22,7 +22,7 @@ publica de novo a API (Render) e a loja (Vercel).
 
 | Variável | Valor |
 |---|---|
-| `DATABASE_URL` | pooler do Supabase **porta 6543** + `?pgbouncer=true&connection_limit=5` (o mesmo do `api/.env`) |
+| `DATABASE_URL` | pooler do Supabase em **modo sessão, porta 5432** + `?connection_limit=5` (o mesmo do `api/.env`). O modo transação (6543) é ~10x mais lento por consulta. |
 | `DIRECT_URL` | pooler **porta 5432** (migrações; o mesmo do `api/.env`) |
 | `SUPABASE_SERVICE_ROLE_KEY` | chave `service_role` **legada** (JWT) — a `sb_secret_` é recusada pelo Storage |
 | `SITE_URL` | URL da loja na Vercel (depois, o domínio) |

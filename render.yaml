@@ -30,7 +30,7 @@ services:
       - key: SITE_URL
         sync: false            # https://<projeto>.vercel.app
       - key: DATABASE_URL
-        sync: false            # pooler do Supabase, porta 6543, ?pgbouncer=true&connection_limit=5
+        sync: false            # pooler do Supabase em modo SESSÃO (porta 5432) + ?connection_limit=5
       - key: DIRECT_URL
         sync: false            # pooler em modo sessão, porta 5432 (migrações no build)
       - key: SUPABASE_URL
