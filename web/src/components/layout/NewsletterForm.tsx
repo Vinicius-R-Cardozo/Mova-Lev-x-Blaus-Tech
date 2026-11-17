@@ -1,6 +1,5 @@
 "use client";
 import { useRef, useState, type FormEvent } from "react";
-import { newsletterInputSchema } from "@movalev/shared";
 import { post } from "@/lib/api";
 
 export function NewsletterForm() {
@@ -11,8 +10,9 @@ export function NewsletterForm() {
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const email = String(new FormData(e.currentTarget).get("email") ?? "");
-    const parsed = newsletterInputSchema.safeParse({ email, source: "rodape" });
+    const email = String(new FormData(e.currentTarget).get("email") ?? "").trim().toLowerCase();
+    // Checagem leve no navegador (sem carregar o Zod em todas as páginas); a API valida de verdade.
+    const parsed = { success: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) && email.length <= 254, data: { email, source: "rodape" as const } };
     if (!parsed.success) {
       setState("error");
       setMessage("Digite um e-mail válido.");

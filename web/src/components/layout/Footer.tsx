@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { LogoCompleta } from "@/components/brand/LogoCompleta";
+import { BrandMark } from "@/components/brand/BrandMark";
 import { CNPJ } from "@/lib/site";
 import { NewsletterForm } from "./NewsletterForm";
+import { CookiePreferencesLink } from "@/components/consent/CookiePreferencesLink";
 
 const columns = [
   {
@@ -19,6 +20,7 @@ const columns = [
       { label: "Trocas e devoluções", href: "/trocas-e-devolucoes" },
       { label: "Guia de tamanhos", href: "/guia-de-tamanhos" },
       { label: "Entregas", href: "/trocas-e-devolucoes#entregas" },
+      { label: "Contato", href: "/contato" },
     ],
   },
   {
@@ -67,13 +69,18 @@ export function Footer() {
         </div>
 
         <div className="mt-12 text-areia md:mt-14">
-          <LogoCompleta className="h-auto w-full" aria-hidden />
+          <BrandMark variant="completa" decorative className="block w-full" />
         </div>
 
-        <div className="flex flex-col gap-2 py-8 text-[13px] font-light text-texto-2 sm:flex-row sm:justify-between">
+        <div className="flex flex-col gap-2 pt-8 text-[13px] font-light text-texto-2 sm:flex-row sm:justify-between">
           <p>© MOVA LEV · {CNPJ}</p>
           <p>Pix · Cartão em até 6x · Boleto</p>
         </div>
+        <nav aria-label="Legal" className="flex flex-wrap gap-x-5 pb-8 pt-2 text-[13px] font-light text-texto-2">
+          <Link href="/politica-de-privacidade" className="inline-flex min-h-touch items-center hover:text-texto">Privacidade</Link>
+          <Link href="/termos-de-uso" className="inline-flex min-h-touch items-center hover:text-texto">Termos de uso</Link>
+          <CookiePreferencesLink className="inline-flex min-h-touch items-center hover:text-texto" label="Preferências de cookies" />
+        </nav>
       </div>
     </footer>
   );

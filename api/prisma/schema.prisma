@@ -513,3 +513,17 @@ model IdempotencyRecord {
   @@index([createdAt])
   @@map("idempotency_records")
 }
+
+/// Mensagens do formulário de contato.
+model ContactMessage {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  email       String
+  subject     String
+  orderNumber String?
+  message     String
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("contact_messages")
+}

@@ -156,3 +156,25 @@ export const accountAddressSchema = addressSchema.extend({
 export type AccountAddressInput = z.infer<typeof accountAddressSchema>;
 
 export const favoritesMergeSchema = z.object({ productIds: z.array(z.string().uuid()).max(200) });
+
+// ─── Contato ────────────────────────────────────────────────
+
+export const CONTACT_SUBJECTS = ["pedido", "troca", "tamanho", "parceria", "outro"] as const;
+export const CONTACT_SUBJECT_LABEL: Record<(typeof CONTACT_SUBJECTS)[number], string> = {
+  pedido: "Meu pedido",
+  troca: "Troca ou devolução",
+  tamanho: "Dúvida de tamanho",
+  parceria: "Parcerias e imprensa",
+  outro: "Outro assunto",
+};
+
+export const contactInputSchema = z.object({
+  name: z.string().trim().min(2, "Seu nome").max(120),
+  email: emailSchema,
+  subject: z.enum(CONTACT_SUBJECTS),
+  orderNumber: z.string().trim().regex(/^#?\d{1,8}$/, "Número do pedido").optional().or(z.literal("").transform(() => undefined)),
+  message: z.string().trim().min(10, "Conte um pouco mais (mín. 10 caracteres)").max(2000),
+  /** Campo-isca invisível: robôs preenchem, pessoas não. */
+  website: z.string().max(0).optional(),
+});
+export type ContactInput = z.infer<typeof contactInputSchema>;

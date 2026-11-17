@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Wordmark } from "@/components/brand/Wordmark";
+import { BrandMark } from "@/components/brand/BrandMark";
 import { ArrowLeftIcon, LockIcon } from "@/components/ui/icons";
 
 export const metadata: Metadata = { title: "Checkout", robots: { index: false, follow: false } };
@@ -16,7 +16,7 @@ export default function CheckoutLayout({ children }: { children: React.ReactNode
             <span className="sm:hidden">Loja</span>
           </Link>
           <Link href="/" aria-label="MOVA LEV — página inicial">
-            <Wordmark className="h-[18px] w-auto md:h-[22px]" aria-hidden />
+            <BrandMark variant="wordmark" decorative className="h-[18px] md:h-[22px]" />
           </Link>
           <p className="flex items-center justify-end gap-2 text-[14px] font-normal md:text-[15px]">
             <LockIcon /> <span className="hidden sm:inline">Compra 100% segura</span>

@@ -2,7 +2,7 @@ import type { CategoryDTO } from "@movalev/shared";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { CartDrawer } from "@/components/cart/CartDrawer";
+import { CartDrawerLazy } from "@/components/cart/CartDrawerLazy";
 import { api } from "@/lib/api";
 
 const FALLBACK: CategoryDTO[] = ["Novidades", "Leggings", "Tops", "Conjuntos"].map((name) => ({
@@ -26,7 +26,7 @@ export default async function LojaLayout({ children }: { children: React.ReactNo
         {children}
       </main>
       <Footer />
-      <CartDrawer />
+      <CartDrawerLazy />
     </>
   );
 }

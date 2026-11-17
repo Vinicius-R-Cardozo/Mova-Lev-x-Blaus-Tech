@@ -62,6 +62,14 @@ Pagamento, frete e e-mail: veja [docs/PAGAMENTO-E-FRETE.md](docs/PAGAMENTO-E-FRE
 - Google: crie o OAuth client no Google Cloud, ative em `[auth.external.google]` do `supabase/config.toml` e defina `NEXT_PUBLIC_AUTH_GOOGLE=true` na loja.
 - Mudanças no admin atualizam o cache da loja na hora (`/api/revalidate`, segredo `REVALIDATE_SECRET` igual na API e na loja).
 
+## LGPD, SEO e desempenho
+
+- Banner de cookies com “Recusar” e “Aceitar” no mesmo destaque e preferências por categoria; GA4 (`NEXT_PUBLIC_GA4_ID`) e Meta Pixel (`NEXT_PUBLIC_META_PIXEL_ID`) só carregam após o consentimento.
+- Páginas legais leem razão social, CNPJ, endereço e e-mails de `NEXT_PUBLIC_*` (veja `web/.env.example`). **Preencha antes de publicar.**
+- `sitemap.xml` (produtos e categorias do banco), `robots.txt`, Open Graph com a marca, JSON-LD Organization/WebSite/Product/BreadcrumbList.
+- Headers de segurança com CSP na loja; helmet, CORS e rate limit na API.
+- Lighthouse (mobile, mediana de 3): Home 93, Categoria 97, Produto 94, Checkout 93, Sobre 95 em desempenho; 100 em acessibilidade.
+
 ## Supabase
 
 Projeto `movalev` (ref `cxmkuqkhvdhwvrdkzckk`, São Paulo) na organização lux drive.

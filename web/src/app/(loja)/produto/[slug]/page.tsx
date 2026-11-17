@@ -4,7 +4,7 @@ import { ApiError, api } from "@/lib/api";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { JsonLd } from "@/components/ui/JsonLd";
 import { ProductView } from "@/components/product/ProductView";
-import { ProductCard } from "@/components/product/ProductCard";
+import { ProductCardStatic } from "@/components/product/ProductCardStatic";
 import { SITE_URL } from "@/lib/site";
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ cor?: string }> };
@@ -88,7 +88,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
           <ul className="mt-8 grid grid-cols-2 gap-x-3 gap-y-10 lg:grid-cols-4 lg:gap-x-4">
             {product.youMayLike.map((p) => (
               <li key={p.id}>
-                <ProductCard product={p} variant="simple" />
+                <ProductCardStatic product={p} />
               </li>
             ))}
           </ul>

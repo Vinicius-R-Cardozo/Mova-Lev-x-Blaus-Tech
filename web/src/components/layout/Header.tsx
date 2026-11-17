@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MODEL_LABEL, MODEL_SLUG, MODELS, type CategoryDTO } from "@movalev/shared";
-import { Wordmark } from "@/components/brand/Wordmark";
+import { BrandMark } from "@/components/brand/BrandMark";
 import { BagIcon, ChevronDownIcon, CloseIcon, MenuIcon, SearchIcon, UserIcon } from "@/components/ui/icons";
 import { useCart } from "@/lib/cart";
 import { useFocusTrap } from "@/lib/useFocusTrap";
@@ -18,6 +18,11 @@ export function Header({ categories }: { categories: CategoryDTO[] }) {
   const isHome = pathname === "/";
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  // O menu mobile só entra no DOM depois da primeira abertura.
+  const [menuMounted, setMenuMounted] = useState(false);
+  useEffect(() => {
+    if (menuOpen) setMenuMounted(true);
+  }, [menuOpen]);
   const cart = useCart();
 
   useEffect(() => {
@@ -76,7 +81,7 @@ export function Header({ categories }: { categories: CategoryDTO[] }) {
 
           {/* Centro: wordmark */}
           <Link href="/" aria-label="MOVA LEV — página inicial" className="flex justify-center">
-            <Wordmark className="h-[18px] w-auto md:h-7" title="MOVA LEV" aria-hidden />
+            <BrandMark variant="wordmark" decorative className="h-[18px] md:h-7" />
           </Link>
 
           {/* Direita: Studio, busca, conta, sacola */}
@@ -104,7 +109,7 @@ export function Header({ categories }: { categories: CategoryDTO[] }) {
           </div>
         </div>
       </header>
-      <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} categories={categories} />
+      {menuMounted && <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} categories={categories} />}
     </>
   );
 }
@@ -134,7 +139,7 @@ function MobileMenu({ open, onClose, categories }: { open: boolean; onClose: () 
           <button type="button" onClick={onClose} aria-label="Fechar menu" className="flex h-11 w-11 items-center justify-center">
             <CloseIcon />
           </button>
-          <Wordmark className="h-[18px] w-auto" aria-hidden />
+          <BrandMark variant="wordmark" decorative className="h-[18px]" />
           <span className="w-11" />
         </div>
         <nav aria-label="Menu principal" className="flex-1 overflow-y-auto px-5 py-2">

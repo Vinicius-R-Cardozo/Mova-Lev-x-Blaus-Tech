@@ -91,6 +91,7 @@ export function CategoryResults({ slug, initial }: { slug: string; initial: Cate
       </div>
 
       <div className={cn("transition-opacity", pending && "opacity-50")} aria-busy={pending}>
+        <h2 className="sr-only">Peças</h2>
         {items.length === 0 ? (
           <div className="py-24 text-center">
             <p className="font-display text-h3-sm">Nenhuma peça com esses filtros.</p>

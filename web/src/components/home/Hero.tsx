@@ -71,7 +71,7 @@ export function Hero({ hero, campaign }: { hero: HomeDTO["hero"]; campaign: Home
         </div>
 
         {campaign.items.length > 0 && (
-          <aside aria-label={campaign.title} className="absolute bottom-[68px] right-gutter hidden w-[356px] bg-offwhite/90 p-[18px] text-preto backdrop-blur-sm lg:block">
+          <aside aria-label={campaign.title} className="absolute bottom-[68px] right-gutter hidden w-[356px] bg-offwhite/90 p-[18px] text-preto lg:block">
             <p className="label-sm text-oliva">{campaign.title}</p>
             <ul className="mt-4 space-y-3">
               {campaign.items.map((p) => (

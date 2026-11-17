@@ -3,6 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { DEFAULT_TIERS, computePricing, type CartLineDTO, type CartQuoteDTO, type PricingResult, type PricingTier, type ProductCardDTO } from "@movalev/shared";
 import { API_URL } from "./site";
 import { readJSON, writeJSON } from "./storage";
+import { useAuth } from "./auth";
 
 /**
  * Sacola: guardada no navegador para visitantes e sincronizada com a conta após o login.
@@ -62,39 +63,29 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [lines, ready]);
 
   // ── Login: junta a sacola de visitante com a da conta; logout limpa ──
+  const { session } = useAuth();
+  const prevUser = useRef<string | null>(null);
   useEffect(() => {
     if (!ready) return;
-    let unsubscribe: (() => void) | undefined;
-    let cancelled = false;
-    // Carregado depois da hidratação: o SDK do Supabase não pesa no primeiro carregamento.
-    void import("./auth").then(({ getSupabase }) => getSupabase()).then((supabase) => {
-      if (!supabase || cancelled) return;
-      const { data } = supabase.auth.onAuthStateChange((event, session) => {
-        tokenRef.current = session?.access_token ?? null;
-        if (event === "SIGNED_OUT") {
-          mergedFor.current = null;
-          setLines([]);
-          return;
-        }
-        const userId = session?.user.id;
-        if (!userId || mergedFor.current === userId) return;
-        mergedFor.current = userId;
-        void fetch(`${API_URL}/cart/merge`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${session!.access_token}` },
-          body: JSON.stringify({ items: toItems(linesRef.current) }),
-        })
-          .then((r) => (r.ok ? (r.json() as Promise<{ items: CartLineDTO[] }>) : null))
-          .then((res) => res && setLines(res.items))
-          .catch(() => undefined);
-      });
-      unsubscribe = () => data.subscription.unsubscribe();
-    });
-    return () => {
-      cancelled = true;
-      unsubscribe?.();
-    };
-  }, [ready]);
+    const userId = session?.user.id ?? null;
+    tokenRef.current = session?.access_token ?? null;
+    if (prevUser.current && !userId) {
+      // Saiu da conta: não deixa a sacola dela no navegador.
+      mergedFor.current = null;
+      setLines([]);
+    }
+    prevUser.current = userId;
+    if (!userId || mergedFor.current === userId) return;
+    mergedFor.current = userId;
+    void fetch(`${API_URL}/cart/merge`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${session!.access_token}` },
+      body: JSON.stringify({ items: toItems(linesRef.current) }),
+    })
+      .then((r) => (r.ok ? (r.json() as Promise<{ items: CartLineDTO[] }>) : null))
+      .then((res) => res && setLines(res.items))
+      .catch(() => undefined);
+  }, [session, ready]);
 
   // ── Orçamento no servidor (debounce) + sacola da conta ──
   const sig = signature(lines);

@@ -20,9 +20,10 @@ async function load(slug: string, query: URLSearchParams) {
   }
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const data = await api.category(slug, "porPagina=1").catch(() => null);
+  // Mesma consulta da página: o Next reaproveita a resposta (uma chamada só à API).
+  const data = await api.category(slug, pickFilters(await searchParams).toString()).catch(() => null);
   if (!data) return {};
   return {
     title: data.category.name,

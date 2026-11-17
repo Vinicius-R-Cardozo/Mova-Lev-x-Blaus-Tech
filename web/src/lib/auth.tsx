@@ -23,7 +23,21 @@ interface AuthState {
 
 const Ctx = createContext<AuthState | null>(null);
 let clientPromise: Promise<SupabaseClient | null> | null = null;
-export const getSupabase = () => (clientPromise ??= import("./supabase").then((m) => m.supabaseBrowser()));
+const loadListeners = new Set<(c: SupabaseClient | null) => void>();
+
+/**
+ * Carrega o SDK do Supabase (~190 KB) só quando precisa: sessão existente ou ação de login.
+ * Quem só navega na vitrine nunca baixa o SDK.
+ */
+export const getSupabase = () =>
+  (clientPromise ??= import("./supabase").then((m) => {
+    const client = m.supabaseBrowser();
+    loadListeners.forEach((l) => l(client));
+    return client;
+  }));
+
+/** Há sessão salva? (cookie sb-<projeto>-auth-token do @supabase/ssr) */
+const hasSessionCookie = () => typeof document !== "undefined" && /(?:^|; )sb-[^=]+-auth-token(?:\.0)?=/.test(document.cookie);
 
 const safeNext = (next?: string) => (next && next.startsWith("/") && !next.startsWith("//") ? next : "/conta");
 
@@ -34,15 +48,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let unsub: (() => void) | undefined;
-    void getSupabase().then((supabase) => {
-      if (!supabase) return setReady(true);
+    const attach = (supabase: SupabaseClient | null) => {
+      if (!supabase || unsub) return setReady(true);
       const { data } = supabase.auth.onAuthStateChange((_event, s) => {
         setSession(s);
         setReady(true);
       });
       unsub = () => data.subscription.unsubscribe();
-    });
-    return () => unsub?.();
+    };
+    loadListeners.add(attach);
+    if (clientPromise) void clientPromise.then(attach);
+    else if (hasSessionCookie()) void getSupabase();
+    else setReady(true); // visitante sem sessão: nada a carregar
+    return () => {
+      loadListeners.delete(attach);
+      unsub?.();
+    };
   }, []);
 
   const apiFetch = useCallback(

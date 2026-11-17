@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Wordmark } from "@/components/brand/Wordmark";
+import { BrandMark } from "@/components/brand/BrandMark";
 import { LoginForm } from "@/components/account/LoginForm";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/cn";
@@ -57,7 +57,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen">
       <header className="flex h-16 items-center justify-between border-b border-linha bg-offwhite px-4 md:px-6">
         <Link href="/admin" className="flex items-center gap-3" aria-label="Painel MOVA LEV">
-          <Wordmark className="h-5 w-auto" aria-hidden />
+          <BrandMark variant="wordmark" decorative className="h-5" />
           <span className="label-sm text-texto-2">Painel</span>
         </Link>
         <div className="flex items-center gap-5 text-[14px]">

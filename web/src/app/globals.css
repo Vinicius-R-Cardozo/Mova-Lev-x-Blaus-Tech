@@ -90,3 +90,50 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Texto corrido das páginas institucionais. */
+@layer components {
+  .prose-mova {
+    @apply max-w-[680px] text-body-lg font-light leading-[1.75] text-texto-3;
+  }
+  .prose-mova h2 {
+    @apply mb-4 mt-14 scroll-mt-28 font-display text-[34px] leading-tight text-texto md:text-[40px];
+  }
+  .prose-mova h3 {
+    @apply mb-2 mt-8 font-sans text-[17px] font-medium text-texto;
+  }
+  .prose-mova p,
+  .prose-mova ul,
+  .prose-mova ol {
+    @apply mb-5;
+  }
+  .prose-mova ul {
+    @apply list-disc pl-5;
+  }
+  .prose-mova ol {
+    @apply list-decimal pl-5;
+  }
+  .prose-mova li {
+    @apply mb-1.5;
+  }
+  .prose-mova a {
+    @apply text-texto underline decoration-1 underline-offset-4 hover:text-oliva;
+  }
+  .prose-mova strong {
+    @apply font-medium text-texto;
+  }
+  .prose-mova table {
+    @apply mb-6 w-full border-collapse text-[15px];
+  }
+  .prose-mova th,
+  .prose-mova td {
+    @apply border-b border-linha px-3 py-2.5 text-left;
+  }
+  .prose-mova th {
+    @apply label-sm bg-bege font-normal text-texto;
+  }
+}
+
+html[data-consent="1"] .cookie-banner {
+  display: none;
+}

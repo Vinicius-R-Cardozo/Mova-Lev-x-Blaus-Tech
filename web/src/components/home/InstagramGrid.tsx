@@ -13,7 +13,9 @@ export function InstagramGrid({ instagram }: { instagram: HomeDTO["instagram"] }
       </div>
       <ul className="mt-10 grid grid-cols-3 gap-2 md:grid-cols-6">
         {instagram.tiles.map((t, i) => (
-          <li key={i} className="aspect-square" style={{ backgroundColor: t.tone }} role="img" aria-label={t.caption} />
+          <li key={i}>
+            <div className="aspect-square" style={{ backgroundColor: t.tone }} role="img" aria-label={t.caption} />
+          </li>
         ))}
       </ul>
     </section>
