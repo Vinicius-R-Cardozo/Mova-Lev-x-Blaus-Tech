@@ -1,7 +1,7 @@
 import { connect } from "node:net";
 import { timingSafeEqual } from "node:crypto";
 import type { FastifyInstance } from "fastify";
-import { prisma } from "../lib/prisma";
+import { databaseUrl, prisma } from "../lib/prisma";
 
 /**
  * DIAGNÓSTICO TEMPORÁRIO de desempenho (rede x CPU). Protegido pelo REVALIDATE_SECRET.
@@ -13,7 +13,7 @@ export async function diagRoutes(app: FastifyInstance) {
     const given = String((req.headers.authorization ?? "").replace(/^Bearer /, ""));
     if (!secret || given.length !== secret.length || !timingSafeEqual(Buffer.from(given), Buffer.from(secret))) return reply.code(404).send();
 
-    const url = new URL(process.env.DATABASE_URL!);
+    const url = new URL(databaseUrl.url!);
     const tcp = (): Promise<number> =>
       new Promise((resolve) => {
         const s = performance.now();
@@ -40,6 +40,7 @@ export async function diagRoutes(app: FastifyInstance) {
 
     return {
       dbPort: url.port,
+      dbSource: databaseUrl.source,
       dbParams: [...url.searchParams.keys()],
       tcpConnectMs: tcpMs,
       selectMs: q,
