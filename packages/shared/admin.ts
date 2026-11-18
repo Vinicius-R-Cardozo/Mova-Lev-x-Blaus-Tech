@@ -104,10 +104,26 @@ export const adminImageUpdateSchema = z.object({
 
 export const adminImageOrderSchema = z.object({ ids: z.array(uuid).max(100) });
 
-export const adminOrderStatusSchema = z.object({
-  status: z.enum(ORDER_STATUSES),
-  trackingCode: z.string().trim().max(60).optional(),
+export const adminOrderStatusSchema = z
+  .object({
+    status: z.enum(ORDER_STATUSES),
+    trackingCode: z.string().trim().max(60).optional(),
+    /** Obrigatório ao cancelar (fica no pedido e na auditoria). */
+    reason: z.string().trim().max(200).optional(),
+  })
+  .refine((s) => s.status !== "CANCELADO" || (s.reason ?? "").length >= 3, { message: "Informe o motivo do cancelamento", path: ["reason"] });
+
+/**
+ * Estorno. Pedido pago e ainda não enviado: estorna e cancela (estoque volta sozinho).
+ * Enviado/entregue (devolução): estorna e, se marcado, devolve as peças ao estoque.
+ * Sem valor = estorno total.
+ */
+export const adminRefundSchema = z.object({
+  amountCents: z.number().int().positive("Valor maior que zero").optional(),
+  reason: z.string().trim().min(3, "Informe o motivo").max(200),
+  restock: z.boolean().default(false),
 });
+export type AdminRefundInput = z.infer<typeof adminRefundSchema>;
 
 export const adminTrackingSchema = z.object({ trackingCode: z.string().trim().max(60) });
 

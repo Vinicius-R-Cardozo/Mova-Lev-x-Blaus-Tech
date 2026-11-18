@@ -1,5 +1,5 @@
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
-import type { Charge, ChargeInput, PaymentProvider, PaymentStatus, WebhookResult } from "./PaymentProvider";
+import type { Charge, ChargeInput, PaymentProvider, PaymentStatus, RefundInput, RefundResult, WebhookResult } from "./PaymentProvider";
 
 /**
  * Pagamento simulado: gera uma referência e dados ILUSTRATIVOS (sem valor real).
@@ -20,6 +20,11 @@ export class MockPaymentProvider implements PaymentProvider {
           ? { ...base, tipo: "boleto", linhaDigitavel: "00000.00000 00000.000000 00000.000000 0 00000000000000", instrucoes: "Boleto simulado — sem valor de pagamento." }
           : { ...base, tipo: "cartao", parcelas: input.installments, instrucoes: "Cartão será cobrado quando o gateway for conectado." };
     return { ref, status: "PENDENTE", payload };
+  }
+
+  /** Simula o estorno (nada é devolvido de verdade no modo de teste). */
+  async estornar(input: RefundInput): Promise<RefundResult> {
+    return { ok: true, ref: `mock-estorno-${input.orderNumber}-${Date.now().toString(36)}` };
   }
 
   async consultarStatus(): Promise<PaymentStatus> {

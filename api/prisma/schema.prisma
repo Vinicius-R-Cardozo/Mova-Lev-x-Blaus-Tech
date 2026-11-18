@@ -392,6 +392,12 @@ model Order {
   /// Endereço copiado no momento da compra.
   shippingAddress          Json?
   trackingCode             String?
+  /// Motivo do cancelamento (painel).
+  cancelReason             String?
+  /// Estorno (total ou parcial) feito pelo painel.
+  refundedAt               DateTime?
+  refundCents              Int            @default(0)
+  refundRef                String?
   /// Reserva de estoque vale até aqui; depois o job cancela e devolve o estoque.
   expiresAt                DateTime
   stockReleasedAt          DateTime?
@@ -405,6 +411,7 @@ model Order {
   @@index([status, expiresAt])
   @@index([profileId])
   @@index([email])
+  @@index([createdAt])
   @@map("orders")
 }
 

@@ -15,6 +15,7 @@ type Me = { id: string; email: string; name: string | null; role: AdminRole; mus
 export const ADMIN_NAV: { href: string; label: string; admin?: boolean; group: string }[] = [
   { href: "/admin", label: "Resumo", admin: true, group: "Vendas" },
   { href: "/admin/pedidos", label: "Pedidos", admin: true, group: "Vendas" },
+  { href: "/admin/clientes", label: "Clientes", admin: true, group: "Vendas" },
   { href: "/admin/cupons", label: "Cupons", admin: true, group: "Vendas" },
   { href: "/admin/produtos", label: "Produtos", group: "Catálogo" },
   { href: "/admin/estoque", label: "Estoque", group: "Catálogo" },

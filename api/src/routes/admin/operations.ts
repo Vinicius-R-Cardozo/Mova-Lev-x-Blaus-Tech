@@ -7,6 +7,8 @@ import {
   ORDER_TRANSITIONS,
   adminCouponSchema,
   adminOrderStatusSchema,
+  adminRefundSchema,
+  PAYMENT_METHODS,
   adminShippingSchema,
   adminTiersSchema,
   adminTrackingSchema,
@@ -15,6 +17,8 @@ import {
 import { prisma } from "../../lib/prisma";
 import { withIdempotency } from "../../lib/idempotency";
 import { cancelOrder, sendConfirmationEmail, toOrderDTO } from "../../lib/orders";
+import { paymentProvider } from "../../providers/payment";
+import { recordMovement } from "../../lib/stock";
 import { revalidateStore } from "../../lib/revalidate";
 import { audit, diffSummary } from "../../lib/audit";
 
@@ -35,6 +39,8 @@ const sendCsv = (reply: FastifyReply, name: string, body: string) =>
 
 const orderFilterSchema = z.object({
   status: z.enum(ORDER_STATUSES).optional(),
+  pagamento: z.enum(PAYMENT_METHODS).optional(),
+  email: z.string().trim().toLowerCase().email().optional(),
   q: z.string().trim().max(80).optional(),
   de: z.coerce.date().optional(),
   ate: z.coerce.date().optional(),
@@ -45,6 +51,8 @@ function orderWhere(f: z.infer<typeof orderFilterSchema>): Prisma.OrderWhereInpu
   const n = f.q && /^#?\d+$/.test(f.q) ? Number(f.q.replace("#", "")) : null;
   return {
     ...(f.status ? { status: f.status } : {}),
+    ...(f.pagamento ? { paymentMethod: f.pagamento } : {}),
+    ...(f.email ? { email: f.email } : {}),
     ...(f.de || f.ate ? { createdAt: { ...(f.de ? { gte: f.de } : {}), ...(f.ate ? { lte: new Date(f.ate.getTime() + 86_399_999) } : {}) } } : {}),
     ...(f.q
       ? { OR: [...(n ? [{ number: n }] : []), { email: { contains: f.q, mode: "insensitive" as const } }, { customerName: { contains: f.q, mode: "insensitive" as const } }] }
@@ -95,6 +103,7 @@ export async function adminOperationsRoutes(app: FastifyInstance) {
         shippingLabel: o.shippingLabel,
         pieces: o.items.reduce((n, i) => n + i.quantity, 0),
         trackingCode: o.trackingCode,
+        refundCents: o.refundCents,
       })),
     };
   });
@@ -141,6 +150,13 @@ export async function adminOperationsRoutes(app: FastifyInstance) {
       customerPhone: o.customerPhone,
       customerCpf: o.customerCpf,
       paymentRef: o.paymentRef,
+      paymentProvider: o.paymentProvider,
+      profileId: o.profileId,
+      cancelReason: o.cancelReason,
+      refundedAt: o.refundedAt,
+      refundCents: o.refundCents,
+      refundRef: o.refundRef,
+      canRefund: !o.refundedAt && ["PAGO", "EM_SEPARACAO", "ENVIADO", "ENTREGUE"].includes(o.status),
       confirmationEmailSentAt: o.confirmationEmailSentAt,
       events: o.events,
       allowedTransitions: ORDER_TRANSITIONS[o.status],
@@ -153,7 +169,7 @@ export async function adminOperationsRoutes(app: FastifyInstance) {
    */
   app.post<{ Params: { id: string } }>("/admin/orders/:id/status", async (req, reply) => {
     const orderId = id.parse(req.params.id);
-    const { status, trackingCode } = adminOrderStatusSchema.parse(req.body);
+    const { status, trackingCode, reason } = adminOrderStatusSchema.parse(req.body);
     const order = await prisma.order.findUnique({ where: { id: orderId } });
     if (!order) return reply.code(404).send({ error: "nao_encontrado" });
     const actor = `admin:${req.user!.email}`;
@@ -162,8 +178,11 @@ export async function adminOperationsRoutes(app: FastifyInstance) {
       return reply.code(422).send({ error: "transicao_invalida", message: `Não é possível ir de “${ORDER_STATUS_LABEL[order.status]}” para “${ORDER_STATUS_LABEL[status]}”.` });
     }
     if (status === "CANCELADO") {
-      const done = await cancelOrder(orderId, "Cancelado pelo admin. Estoque devolvido.", actor);
-      if (done) await audit(req, { action: "order.cancel", entity: "pedido", entityId: orderId, summary: `Pedido #${order.number} cancelado (estoque devolvido)`, before: { status: order.status }, after: { status } });
+      const done = await cancelOrder(orderId, `Cancelado pelo admin: ${reason}. Estoque devolvido.`, actor);
+      if (done) {
+        await prisma.order.update({ where: { id: orderId }, data: { cancelReason: reason } });
+        await audit(req, { action: "order.cancel", entity: "pedido", entityId: orderId, summary: `Pedido #${order.number} cancelado (${reason}); estoque devolvido`, before: { status: order.status }, after: { status, reason } });
+      }
       return { ok: true, changed: done };
     }
     const moved = await prisma.order.updateMany({
@@ -174,6 +193,64 @@ export async function adminOperationsRoutes(app: FastifyInstance) {
     await prisma.orderEvent.create({ data: { orderId, status, message: `Status: ${ORDER_STATUS_LABEL[status]}${trackingCode ? ` · rastreio ${trackingCode}` : ""}`, actor } });
     await audit(req, { action: "order.status", entity: "pedido", entityId: orderId, summary: `Pedido #${order.number}: ${ORDER_STATUS_LABEL[order.status]} → ${ORDER_STATUS_LABEL[status]}`, before: { status: order.status }, after: { status, trackingCode } });
     return { ok: true, changed: true };
+  });
+
+  /**
+   * Estorno (uma vez por pedido, total ou parcial) pelo gateway.
+   * - Pago/Em separação: estorna e cancela — o estoque volta pelo cancelamento.
+   * - Enviado/Entregue (devolução): estorna; as peças voltam ao estoque só se
+   *   `restock` (Devolução no histórico de estoque).
+   * Se o gateway recusar, nada é marcado e a mensagem explica.
+   */
+  app.post<{ Params: { id: string } }>("/admin/orders/:id/refund", { config: { rateLimit: { max: 10, timeWindow: "1 minute" } } }, async (req, reply) => {
+    const orderId = id.parse(req.params.id);
+    const input = adminRefundSchema.parse(req.body);
+    const order = await prisma.order.findUnique({ where: { id: orderId }, include: { items: true } });
+    if (!order) return reply.code(404).send({ error: "nao_encontrado" });
+    if (order.refundedAt) return reply.code(409).send({ error: "ja_estornado", message: "Este pedido já foi estornado." });
+    if (!["PAGO", "EM_SEPARACAO", "ENVIADO", "ENTREGUE"].includes(order.status)) {
+      return reply.code(422).send({
+        error: "nao_pago",
+        message: order.status === "CANCELADO" ? "Pedido cancelado sem pagamento: não há valor para estornar." : "Pedido ainda aguardando pagamento: use Cancelar.",
+      });
+    }
+    const amount = input.amountCents ?? order.totalCents;
+    if (amount > order.totalCents) return reply.code(422).send({ error: "valor_maior", message: "O estorno não pode passar do total do pedido." });
+
+    const result = await paymentProvider.estornar({ ref: order.paymentRef, orderNumber: order.number, amountCents: amount });
+    if (!result.ok) return reply.code(502).send({ error: "gateway", message: `O gateway não fez o estorno: ${result.message}. Faça pelo painel do gateway e tente de novo.` });
+
+    const actor = `admin:${req.user!.email}`;
+    const label = `R$ ${(amount / 100).toFixed(2).replace(".", ",")}${amount < order.totalCents ? " (parcial)" : ""}`;
+    // Marca o estorno só uma vez, mesmo com dois cliques/abas (update condicional).
+    const marked = await prisma.order.updateMany({ where: { id: orderId, refundedAt: null }, data: { refundedAt: new Date(), refundCents: amount, refundRef: result.ref } });
+    if (marked.count === 0) return reply.code(409).send({ error: "ja_estornado", message: "Este pedido já foi estornado." });
+    await prisma.orderEvent.create({ data: { orderId, message: `Estorno de ${label}: ${input.reason}`, actor } });
+
+    let restocked = false;
+    if (order.status === "PAGO" || order.status === "EM_SEPARACAO") {
+      await cancelOrder(orderId, `Cancelado com estorno: ${input.reason}. Estoque devolvido.`, actor, ["PAGO", "EM_SEPARACAO"]);
+      await prisma.order.update({ where: { id: orderId }, data: { cancelReason: input.reason } });
+      restocked = true;
+    } else if (input.restock) {
+      await prisma.$transaction(async (tx) => {
+        for (const i of order.items) {
+          const v = await tx.variant.update({ where: { id: i.variantId }, data: { stock: { increment: i.quantity } }, select: { stock: true } });
+          await recordMovement(tx, { variantId: i.variantId, type: "DEVOLUCAO", delta: i.quantity, stockAfter: v.stock, orderId, note: `Pedido #${order.number}: ${input.reason}`.slice(0, 200), actor: { id: req.user!.id, email: req.user!.email } });
+        }
+      });
+      await prisma.orderEvent.create({ data: { orderId, message: "Peças devolvidas ao estoque", actor } });
+      restocked = true;
+    }
+    await audit(req, {
+      action: "order.refund",
+      entity: "pedido",
+      entityId: orderId,
+      summary: `Pedido #${order.number}: estorno de ${label} (${input.reason})${restocked ? "; estoque devolvido" : ""}`,
+      after: { amountCents: amount, ref: result.ref, restocked },
+    });
+    revalidateStore(["catalog"]);
+    return { ok: true, amountCents: amount, restocked };
   });
 
   app.put<{ Params: { id: string } }>("/admin/orders/:id/tracking", async (req) => {
