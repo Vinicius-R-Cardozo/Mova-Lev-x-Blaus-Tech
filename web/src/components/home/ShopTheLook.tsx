@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { formatBRL, type HomeDTO } from "@movalev/shared";
@@ -28,6 +29,7 @@ export function ShopTheLook({ look }: { look: HomeDTO["shopTheLook"] }) {
         className="h-[520px] md:h-[780px]"
         style={{ background: "linear-gradient(160deg,#E3D3C3 0%,#D8C8B8 55%,#CFC1B2 100%)" }}
       >
+        {look.imageUrl && <Image src={look.imageUrl} alt={look.caption} fill sizes="(min-width: 1024px) 54vw, 100vw" className="object-cover" />}
         {!look.imageUrl && (
           <div aria-hidden className="absolute left-1/2 top-[8%] h-[84%] w-[34%] -translate-x-1/2 rounded-[50%] bg-[#D6C3AF]/80">
             <div className="absolute -top-[6%] left-1/2 aspect-square w-[40%] -translate-x-1/2 rounded-full bg-[#C9B5A2]" />

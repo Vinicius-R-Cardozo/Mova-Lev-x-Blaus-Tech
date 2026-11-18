@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { HomeDTO } from "@movalev/shared";
 
 export function InstagramGrid({ instagram }: { instagram: HomeDTO["instagram"] }) {
@@ -14,7 +15,9 @@ export function InstagramGrid({ instagram }: { instagram: HomeDTO["instagram"] }
       <ul className="mt-10 grid grid-cols-3 gap-2 md:grid-cols-6">
         {instagram.tiles.map((t, i) => (
           <li key={i} data-reveal>
-            <div className="aspect-square" style={{ backgroundColor: t.tone }} role="img" aria-label={t.caption} />
+            <div className="relative aspect-square overflow-hidden" style={{ backgroundColor: t.tone }} role="img" aria-label={t.caption}>
+              {t.imageUrl && <Image src={t.imageUrl} alt="" fill sizes="(min-width: 768px) 16vw, 33vw" className="object-cover" />}
+            </div>
           </li>
         ))}
       </ul>

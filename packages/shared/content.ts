@@ -27,20 +27,20 @@ export const homeContentSchema = z.object({
     cta: z.string(),
     items: z.array(slugRef.extend({ hotspot: z.object({ x: z.number().min(0).max(100), y: z.number().min(0).max(100) }) })).max(6),
   }),
-  sensations: z.array(z.object({ sensation: z.enum(SENSATIONS), title: z.string(), text: z.string(), href: z.string() })).max(2),
+  sensations: z.array(z.object({ sensation: z.enum(SENSATIONS), title: z.string(), text: z.string(), href: z.string(), imageUrl: z.string().url().nullable().optional() })).max(2),
   studio: z.object({
     kicker: z.string(),
     title: z.string(),
     titleEmphasis: z.string(),
     text: z.string(),
     cta,
-    classes: z.array(z.object({ title: z.string(), meta: z.string(), tone: z.string(), videoUrl: z.string().url().nullable() })).max(6),
+    classes: z.array(z.object({ title: z.string(), meta: z.string(), tone: z.string(), videoUrl: z.string().url().nullable(), imageUrl: z.string().url().nullable().optional() })).max(6),
   }),
   instagram: z.object({
     title: z.string(),
     handle: z.string(),
     url: z.string().url(),
-    tiles: z.array(z.object({ tone: z.string(), caption: z.string() })).max(12),
+    tiles: z.array(z.object({ tone: z.string(), caption: z.string(), imageUrl: z.string().url().nullable().optional() })).max(12),
   }),
 });
 export type HomeContent = z.infer<typeof homeContentSchema>;

@@ -39,7 +39,7 @@ export function Media({
           <Pictogram kind={pictogram} detail={detail} className={pictogramClassName} />
         </div>
       )}
-      {(label || (showCaption && !image?.url && image?.caption)) && (
+      {!image?.url && (label || (showCaption && image?.caption)) && (
         <span className="label-sm absolute bottom-4 left-4 right-4 text-texto-3">{label ?? image?.caption}</span>
       )}
     </div>

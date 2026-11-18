@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { formatBRL, type HomeDTO } from "@movalev/shared";
@@ -52,11 +53,15 @@ export function Hero({ hero, campaign }: { hero: HomeDTO["hero"]; campaign: Home
           playsInline
           aria-hidden
         />
+      ) : hero.posterUrl ? (
+        <Image src={hero.posterUrl} alt="" fill priority sizes="100vw" className="hero-settle object-cover object-[60%_center]" />
       ) : (
         <HeroArt />
       )}
+      {/* Véu no topo: menu claro legível sobre foto/vídeo claros. */}
+      {(hero.videoUrl || hero.posterUrl) && <div aria-hidden className="absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-black/40 to-transparent" />}
       <div aria-hidden className="absolute inset-x-0 bottom-0 h-[78%] bg-gradient-to-t from-black/60 via-black/25 to-transparent" />
-      {!hero.videoUrl && <p className="enter label-sm absolute right-gutter top-[124px] hidden text-preto/80 md:block" style={cascade(5)}>{hero.caption}</p>}
+      {!hero.videoUrl && !hero.posterUrl && <p className="enter label-sm absolute right-gutter top-[124px] hidden text-preto/80 md:block" style={cascade(5)}>{hero.caption}</p>}
 
       <div className="container-site relative flex h-full flex-col justify-end pb-8 md:pb-[68px]">
         <p className="enter label text-[11px] tracking-[0.32em] md:text-label">{hero.kicker}</p>

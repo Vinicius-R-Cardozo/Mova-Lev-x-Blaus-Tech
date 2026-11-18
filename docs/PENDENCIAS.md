@@ -25,6 +25,7 @@
 - [ ] Conferir a **tabela do Guia de tamanhos** com a modelagem oficial.
 - [ ] Confirmar **preços e estoques reais** (os do seed são ilustrativos).
 - [ ] **Fotos e vídeos** reais pelo admin (produtos); URL do **vídeo do hero** e da **foto do Compre o look**.
+- [ ] **Fotos de demonstração no ar (fictícias, Unsplash — licença gratuita):** produtos, banners das categorias e home. Fotos enviadas pelo admin têm prioridade e não são sobrescritas. Para tirar todas de uma vez: `npm run demo:fotos -w @movalev/api -- --remover` (volta aos desenhos e restaura a home).
 - [ ] Revisão jurídica da **Política de privacidade** e dos **Termos de uso**.
 
 ## 4. Seu acesso de admin

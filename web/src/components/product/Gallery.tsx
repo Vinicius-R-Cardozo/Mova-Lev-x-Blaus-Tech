@@ -1,11 +1,14 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { IMAGE_KIND_LABEL, type ImageDTO, type Pictogram } from "@movalev/shared";
 import { Media } from "@/components/ui/Media";
 import { cn } from "@/lib/cn";
 
 /** Grade 2×2 no desktop; carrossel com indicadores no mobile. */
-export function Gallery({ images, tone, pictogram, name }: { images: ImageDTO[]; tone: string; pictogram: Pictogram; name: string }) {
+export function Gallery({ images: all, tone, pictogram, name }: { images: ImageDTO[]; tone: string; pictogram: Pictogram; name: string }) {
+  // Com fotos publicadas, o espaço do vídeo só aparece quando houver vídeo de fato.
+  const images = useMemo(() => (all.some((i) => i.url) ? all.filter((i) => i.kind !== "VIDEO" || i.videoUrl) : all), [all]);
+  const oddLast = images.length % 2 === 1 && images.length > 1;
   const trackRef = useRef<HTMLUListElement>(null);
   const [index, setIndex] = useState(0);
 
@@ -19,7 +22,7 @@ export function Gallery({ images, tone, pictogram, name }: { images: ImageDTO[];
     if (el) setIndex(Math.round(el.scrollLeft / el.clientWidth));
   };
 
-  const render = (img: ImageDTO, i: number, priority: boolean) =>
+  const render = (img: ImageDTO, i: number, priority: boolean, wide = false) =>
     img.kind === "VIDEO" && img.videoUrl ? (
       <video src={img.videoUrl} muted loop playsInline autoPlay className="aspect-[3/4] w-full object-cover" aria-label={img.alt} />
     ) : (
@@ -29,7 +32,7 @@ export function Gallery({ images, tone, pictogram, name }: { images: ImageDTO[];
         pictogram={pictogram}
         detail={img.kind === "DETALHE"}
         label={IMAGE_KIND_LABEL[img.kind]}
-        className="hero-settle aspect-[3/4]"
+        className={cn("hero-settle", wide ? "aspect-[3/2]" : "aspect-[3/4]")}
         pictogramClassName={img.kind === "DETALHE" ? "h-[62%] w-auto" : "h-[50%] w-auto"}
         sizes="(min-width: 1024px) 29vw, 100vw"
         priority={priority && i === 0}
@@ -40,7 +43,9 @@ export function Gallery({ images, tone, pictogram, name }: { images: ImageDTO[];
     <section aria-label={`Fotos de ${name}`}>
       <ul className="hidden grid-cols-2 gap-2 lg:grid">
         {images.map((img, i) => (
-          <li key={img.id} className="overflow-hidden">{render(img, i, true)}</li>
+          <li key={img.id} className={cn("overflow-hidden", oddLast && i === images.length - 1 && "col-span-2")}>
+            {render(img, i, true, oddLast && i === images.length - 1)}
+          </li>
         ))}
       </ul>
 

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { HomeDTO } from "@movalev/shared";
 import { PlayIcon } from "@/components/ui/icons";
@@ -22,8 +23,12 @@ export function Studio({ studio }: { studio: HomeDTO["studio"] }) {
           {studio.classes.map((c) => (
             <li key={c.title} data-reveal>
               <a href={c.videoUrl ?? studio.cta.href} className="group block" aria-label={`${c.title}, ${c.meta}`}>
-                <span className="flex aspect-[3/4] items-center justify-center transition-transform duration-slow ease-out group-hover:scale-[1.04]" style={{ backgroundColor: c.tone }}>
-                  <PlayIcon width={28} height={28} className="text-offwhite" />
+                <span className="relative block overflow-hidden">
+                  <span className="flex aspect-[3/4] items-center justify-center transition-transform duration-slow ease-out group-hover:scale-[1.04]" style={{ backgroundColor: c.tone }}>
+                    {c.imageUrl && <Image src={c.imageUrl} alt="" fill sizes="(min-width: 640px) 25vw, 100vw" className="object-cover" />}
+                    {c.imageUrl && <span aria-hidden className="absolute inset-0 bg-preto/25" />}
+                    <PlayIcon width={28} height={28} className="relative text-offwhite" />
+                  </span>
                 </span>
                 <span className="mt-4 block text-[16px] font-normal">{c.title}</span>
                 <span className="mt-1.5 block text-[14px] font-light text-offwhite/60">{c.meta}</span>

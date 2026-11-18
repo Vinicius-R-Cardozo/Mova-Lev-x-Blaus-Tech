@@ -123,16 +123,16 @@ export interface HomeDTO {
     cta: string;
     items: { product: ProductCardDTO; hotspot: { x: number; y: number } }[];
   };
-  sensations: { sensation: Sensation; title: string; text: string; href: string }[];
+  sensations: { sensation: Sensation; title: string; text: string; href: string; imageUrl?: string | null }[];
   studio: {
     kicker: string;
     title: string;
     titleEmphasis: string;
     text: string;
     cta: { label: string; href: string };
-    classes: { title: string; meta: string; tone: string; videoUrl: string | null }[];
+    classes: { title: string; meta: string; tone: string; videoUrl: string | null; imageUrl?: string | null }[];
   };
-  instagram: { title: string; handle: string; url: string; tiles: { tone: string; caption: string }[] };
+  instagram: { title: string; handle: string; url: string; tiles: { tone: string; caption: string; imageUrl?: string | null }[] };
 }
 
 /** Linha da sacola com preço e disponibilidade conferidos no servidor. */
