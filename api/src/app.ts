@@ -46,7 +46,12 @@ export async function buildApp() {
   });
 
   // Limite global generoso; rotas sensíveis (login, checkout, newsletter) definem o próprio.
-  await app.register(rateLimit, { global: true, max: 300, timeWindow: "1 minute" });
+  await app.register(rateLimit, {
+    global: true,
+    max: 300,
+    timeWindow: "1 minute",
+    errorResponseBuilder: (_req, ctx) => ({ statusCode: 429, code: "muitas_requisicoes", message: `Muitas tentativas seguidas. Tente de novo em ${Math.max(1, Math.ceil(ctx.ttl / 1000))} s.` }),
+  });
 
   app.setErrorHandler((err: FastifyError | ZodError, req, reply) => {
     if (err instanceof ZodError) {

@@ -1,4 +1,4 @@
-# MOVA LEV — o que falta (17/11/2026)
+# MOVA LEV — o que falta (18/11/2026)
 
 ## 1. Para publicar (fase 7) — depende de você
 - [x] **GitHub:** código enviado para github.com/Vinicius-R-Cardozo/Mova-Lev-x-Blaus-Tech (público).
@@ -19,17 +19,20 @@
 - [ ] **GA4** e **Meta Pixel** (opcionais) — só carregam com consentimento.
 
 ## 3. Dados e conteúdo
-- [ ] Dados da empresa para as páginas legais: **razão social, CNPJ, endereço, e-mail de atendimento, e-mail do encarregado (DPO), WhatsApp e horário**.
+- [ ] Dados da empresa para as páginas legais: **razão social, CNPJ, endereço, e-mail de atendimento, e-mail do encarregado (DPO), WhatsApp e horário** — preencher no painel em **Configurações › Dados da loja** (enquanto vazios, o site mostra “[a preencher: …]”).
 - [ ] E-mail que recebe o **formulário de contato** (`STORE_EMAIL`).
-- [ ] **Endereço da loja** para “Retirar na loja” (admin → Desconto e frete).
-- [ ] Conferir a **tabela do Guia de tamanhos** com a modelagem oficial.
+- [ ] **Endereço da loja** para “Retirar na loja” (painel → Configurações › Frete e desconto).
+- [ ] Conferir a **tabela do Guia de tamanhos** com a modelagem oficial (painel → Conteúdo › Páginas › Guia de tamanhos).
 - [ ] Confirmar **preços e estoques reais** (os do seed são ilustrativos).
 - [ ] **Fotos e vídeos** reais pelo admin (produtos); URL do **vídeo do hero** e da **foto do Compre o look**.
 - [ ] **Fotos de demonstração no ar (fictícias, Unsplash — licença gratuita):** produtos, banners das categorias e home. Fotos enviadas pelo admin têm prioridade e não são sobrescritas. Para tirar todas de uma vez: `npm run demo:fotos -w @movalev/api -- --remover` (volta aos desenhos e restaura a home).
 - [ ] Revisão jurídica da **Política de privacidade** e dos **Termos de uso**.
 
-## 4. Seu acesso de admin
-- [ ] Entrar em `/conta` com o seu e-mail (link mágico) → me avisar → eu promovo para admin.
+## 4. Painel administrativo — guia completo em [PAINEL.md](PAINEL.md)
+- [ ] **Criar o seu acesso de Admin:** `npm run admin:criar -w @movalev/api -- seu-email@dominio.com "Seu nome" ADMIN` → entrar em `/admin/login` com a senha provisória → cadastrar o autenticador → trocar a senha.
+- [ ] **Apagar as 2 contas de teste do painel** (`painel.admin.teste@example.com` e `painel.editor.teste@example.com`) depois que o seu acesso funcionar: Configurações › Usuários › Tirar acesso, e excluir as contas no Supabase (Authentication › Users). Apagar também o arquivo `.env.contas-teste.local`.
+- [ ] **Estorno real:** hoje o botão Estornar registra o estorno e simula no provedor de teste. Com o gateway escolhido, ele passa a devolver o dinheiro de verdade (`PaymentProvider.estornar`).
+- [ ] (Opcional) Desligar o 2º fator só em desenvolvimento com `ADMIN_MFA_REQUIRED=false` no `.env` da API. **Nunca em produção.**
 
 ## 5. Depois do seu teste local
 - [ ] Me avisar para **apagar os pedidos de teste** e voltar a numeração para #1001.
@@ -37,7 +40,9 @@
 ## 6. Melhorias opcionais (decidir se quer)
 - [ ] Trocar o tamanho dentro da sacola (hoje: remover e adicionar de novo).
 - [ ] Avaliações de produto (hoje aparece “Ainda sem avaliações”).
-- [ ] Upload direto do vídeo do hero e da foto do Compre o look no admin (hoje é por URL).
+- [ ] Upload direto do vídeo do hero e da foto do Compre o look no painel (hoje é por URL).
+- [ ] Histórico de versões das páginas de texto (hoje a auditoria guarda o antes e depois dos primeiros 2.000 caracteres).
+- [ ] E-mail automático de “estoque baixo” para o Admin (hoje o alerta aparece no Resumo e no Estoque).
 - [ ] Logo em PNG no cabeçalho dos e-mails (hoje o nome vai em texto).
 - [ ] Trava no banco para o cupom de 1ª compra em pedidos simultâneos do mesmo e-mail.
 - [ ] Redis para rate limit e cache compartilhados quando houver mais de uma instância da API.
