@@ -16,7 +16,7 @@ export function NewArrivals({ newArrivals, bestSellers }: { newArrivals: Product
 
   return (
     <section aria-labelledby="novidades-titulo" className="container-site pt-20 md:pt-[120px]">
-      <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+      <div data-reveal className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
         <h2 id="novidades-titulo" className="text-h2-sm md:text-h2">
           Novidades
         </h2>
@@ -31,10 +31,7 @@ export function NewArrivals({ newArrivals, bestSellers }: { newArrivals: Product
                 aria-selected={tab === t.id}
                 aria-controls="novidades-painel"
                 onClick={() => setTab(t.id)}
-                className={cn(
-                  "label min-h-touch decoration-1 underline-offset-[7px]",
-                  tab === t.id ? "text-preto underline" : "text-texto-2 hover:text-preto",
-                )}
+                className={cn("label tab-line min-h-touch transition-colors", tab === t.id ? "text-preto" : "text-texto-2 hover:text-preto")}
               >
                 {t.label}
               </button>
@@ -47,7 +44,10 @@ export function NewArrivals({ newArrivals, bestSellers }: { newArrivals: Product
       </div>
       <div id="novidades-painel" role="tabpanel" aria-labelledby={`tab-${tab}`} className="mt-8 grid grid-cols-2 gap-x-3 gap-y-10 md:mt-10 lg:grid-cols-4 lg:gap-x-4">
         {items.map((p) => (
-          <ProductCard key={`${tab}-${p.id}`} product={p} />
+          // A chave muda com a aba: os cards da outra aba entram de novo com o reveal.
+          <div key={`${tab}-${p.id}`} data-reveal>
+            <ProductCard product={p} />
+          </div>
         ))}
       </div>
     </section>

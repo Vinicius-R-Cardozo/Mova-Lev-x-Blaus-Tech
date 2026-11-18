@@ -61,6 +61,7 @@ export function ShopTheLook({ look }: { look: HomeDTO["shopTheLook"] }) {
       </PhotoPlaceholder>
 
       <div className="flex flex-col justify-center bg-bege px-4 py-14 md:px-16 lg:py-0">
+        <div data-reveal>
         <p className="label text-texto-3">{look.kicker}</p>
         <h2 id="look-titulo" className="mt-5 text-h2-sm md:text-h2">
           {look.title} <em>{look.titleEmphasis}</em>
@@ -76,6 +77,7 @@ export function ShopTheLook({ look }: { look: HomeDTO["shopTheLook"] }) {
             </li>
           ))}
         </ul>
+        </div>
         <p className="mt-9 text-[15px] font-light text-texto-3">{look.note}</p>
         <button type="button" onClick={addAll} className="btn-primary mt-8 self-start">
           {look.cta}

@@ -1,12 +1,15 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { formatBRL, type HomeDTO } from "@movalev/shared";
 import { Media } from "@/components/ui/Media";
 import { CloseIcon } from "@/components/ui/icons";
 import { cardToCartLine } from "@/components/product/ProductCard";
 import { useCart } from "@/lib/cart";
 import { defaultSize } from "./lookToCart";
+
+/** Posição na cascata de entrada (multiplica --motion-stagger). */
+const cascade = (i: number) => ({ "--i": i }) as CSSProperties;
 
 /** Silhueta e linhas da campanha enquanto o vídeo não chega. */
 function HeroArt() {
@@ -56,12 +59,12 @@ export function Hero({ hero, campaign }: { hero: HomeDTO["hero"]; campaign: Home
       {!hero.videoUrl && <p className="label-sm absolute right-gutter top-[124px] hidden text-preto/80 md:block">{hero.caption}</p>}
 
       <div className="container-site relative flex h-full flex-col justify-end pb-8 md:pb-[68px]">
-        <p className="label text-[11px] tracking-[0.32em] md:text-label">{hero.kicker}</p>
-        <h1 id="hero-titulo" className="mt-4 text-hero-m md:mt-8 md:text-hero">
+        <p className="enter label text-[11px] tracking-[0.32em] md:text-label">{hero.kicker}</p>
+        <h1 id="hero-titulo" className="enter mt-4 text-hero-m md:mt-8 md:text-hero" style={cascade(1)}>
           {hero.titleLine1} <br className="hidden md:block" />
           <em>{hero.titleLine2}</em>
         </h1>
-        <div className="mt-6 flex flex-wrap gap-3 md:mt-7">
+        <div className="enter mt-6 flex flex-wrap gap-3 md:mt-7" style={cascade(2)}>
           <Link href={hero.primaryCta.href} className="btn-light w-full md:w-auto md:px-10">
             {hero.primaryCta.label}
           </Link>
@@ -71,7 +74,7 @@ export function Hero({ hero, campaign }: { hero: HomeDTO["hero"]; campaign: Home
         </div>
 
         {campaign.items.length > 0 && (
-          <aside aria-label={campaign.title} className="absolute bottom-[68px] right-gutter hidden w-[356px] bg-offwhite/90 p-[18px] text-preto lg:block">
+          <aside aria-label={campaign.title} className="enter absolute bottom-[68px] right-gutter hidden w-[356px] bg-offwhite/90 p-[18px] text-preto lg:block" style={cascade(4)}>
             <p className="label-sm text-oliva">{campaign.title}</p>
             <ul className="mt-4 space-y-3">
               {campaign.items.map((p) => (

@@ -3,6 +3,7 @@ import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { CartDrawerLazy } from "@/components/cart/CartDrawerLazy";
+import { RevealObserver } from "@/components/motion/RevealObserver";
 import { api } from "@/lib/api";
 
 const FALLBACK: CategoryDTO[] = ["Novidades", "Leggings", "Tops", "Conjuntos"].map((name) => ({
@@ -27,6 +28,7 @@ export default async function LojaLayout({ children }: { children: React.ReactNo
       </main>
       <Footer />
       <CartDrawerLazy />
+      <RevealObserver />
     </>
   );
 }

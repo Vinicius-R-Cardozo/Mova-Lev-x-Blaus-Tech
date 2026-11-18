@@ -66,8 +66,9 @@ const config: Config = {
       height: { hero: "920px", "hero-m": "700px", btn: "56px" },
       minHeight: { touch: "44px" },
       minWidth: { touch: "44px" },
-      transitionDuration: { DEFAULT: "250ms" },
-      transitionTimingFunction: { DEFAULT: "ease" },
+      // Durações e curvas vêm dos tokens de movimento (globals.css).
+      transitionDuration: { DEFAULT: "var(--motion-base)", fast: "var(--motion-fast)", base: "var(--motion-base)", slow: "var(--motion-slow)" },
+      transitionTimingFunction: { DEFAULT: "var(--ease-standard)", standard: "var(--ease-standard)", out: "var(--ease-out)" },
       scale: { 102: "1.02", 103: "1.03", 98: "0.98" },
       boxShadow: { resumo: "0 12px 40px -12px rgba(26,26,26,0.12)" },
       zIndex: { header: "40", drawer: "60", toast: "70" },

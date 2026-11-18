@@ -2,6 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Tokens de movimento: tudo que anima na loja sai daqui.
+ * Só `opacity` e `transform` são animados (60 fps, sem refazer layout).
+ */
+:root {
+  --motion-fast: 160ms; /* toque/press, ícones */
+  --motion-base: 240ms; /* hover, troca de estado */
+  --motion-slow: 360ms; /* entradas e reveal */
+  --motion-stagger: 60ms; /* intervalo da cascata */
+  --motion-distance: 12px; /* deslocamento das entradas */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1); /* muda de estado à vista */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1); /* chega e assenta, sem quique */
+}
+
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
@@ -43,7 +57,7 @@
   }
 
   .btn {
-    @apply label inline-flex h-btn select-none items-center justify-center gap-3 px-9 transition-[transform,background-color,color,border-color] duration-[250ms] ease-out hover:scale-102 active:scale-98 disabled:pointer-events-none disabled:opacity-50;
+    @apply label press inline-flex h-btn select-none items-center justify-center gap-3 px-9 hover:scale-102 disabled:pointer-events-none disabled:opacity-50;
   }
   .btn-primary {
     @apply btn bg-oliva text-offwhite hover:bg-oliva-escuro;
@@ -63,7 +77,21 @@
 
   /* Botão de ícone redondo (exceção aos cantos retos). */
   .icon-btn-round {
-    @apply inline-flex h-11 w-11 items-center justify-center rounded-full transition-transform duration-200 hover:scale-102 active:scale-98;
+    @apply press inline-flex h-11 w-11 items-center justify-center rounded-full hover:scale-102;
+  }
+
+  /*
+   * Hover suave + "aperto" ao clicar: o press responde mais rápido que o hover
+   * (o dedo precisa sentir na hora).
+   */
+  .press {
+    transition-property: transform, background-color, color, border-color, opacity;
+    transition-duration: var(--motion-base);
+    transition-timing-function: var(--ease-out);
+  }
+  .press:active:not(:disabled) {
+    transform: scale(0.98);
+    transition-duration: var(--motion-fast);
   }
 
   .link-underline {
@@ -76,6 +104,191 @@
 
   .container-site {
     @apply mx-auto w-full max-w-site px-4 md:px-gutter;
+  }
+}
+
+/* ───────────────────────── Movimento ───────────────────────── */
+
+/* Entrada ao carregar (hero): só CSS, roda antes do JavaScript. Use --i para a cascata. */
+@keyframes enter-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, var(--motion-distance), 0);
+  }
+}
+.enter {
+  animation: enter-up var(--motion-slow) var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * var(--motion-stagger));
+}
+
+/* Troca de conteúdo no mesmo lugar (aba, cor, preço, quantidade): fade curto. */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes fade-up-sm {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 4px, 0);
+  }
+}
+.swap-in {
+  animation: fade-in var(--motion-base) var(--ease-out) both;
+}
+.swap-up {
+  animation: fade-up-sm var(--motion-base) var(--ease-out) both;
+}
+
+/*
+ * Reveal ao rolar (só na 1ª vez). O RevealObserver liga `html.reveal-on` depois de
+ * marcar o que já está na tela, então nada visível no carregamento some e sem
+ * JavaScript tudo continua aparecendo.
+ */
+.reveal-on [data-reveal]:not([data-revealed]) {
+  opacity: 0;
+  transform: translate3d(0, var(--motion-distance), 0);
+}
+.reveal-on [data-reveal] {
+  transition:
+    opacity var(--motion-slow) var(--ease-out),
+    transform var(--motion-slow) var(--ease-out);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+/*
+ * Card de produto: no hover (só mouse) a moldura sobe 2px com sombra suave,
+ * a foto aproxima 2% e, se houver, cruza para a 2ª foto.
+ * A sombra fica num pseudo-elemento e anima só a opacidade.
+ */
+.card-frame {
+  position: relative;
+  isolation: isolate; /* a sombra (z-index -1) fica atrás da foto, não atrás da página */
+  transition: transform var(--motion-base) var(--ease-out);
+}
+.card-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  box-shadow: 0 18px 40px -16px rgba(26, 26, 26, 0.22);
+  opacity: 0;
+  transition: opacity var(--motion-base) var(--ease-out);
+  pointer-events: none;
+}
+.card-zoom {
+  transition: transform var(--motion-slow) var(--ease-out);
+}
+.card-alt {
+  opacity: 0;
+  transition: opacity var(--motion-base) var(--ease-standard);
+}
+@media (hover: hover) and (pointer: fine) {
+  .group:hover > .card-frame {
+    transform: translate3d(0, -2px, 0);
+  }
+  .group:hover > .card-frame::after {
+    opacity: 1;
+  }
+  .group:hover .card-zoom {
+    transform: scale(1.02);
+  }
+  .group:hover .card-alt {
+    opacity: 1;
+  }
+}
+/* Telas de toque não baixam a 2ª foto (imagem lazy com display:none não carrega). */
+@media (hover: none), (pointer: coarse) {
+  .card-alt {
+    display: none;
+  }
+}
+
+/* Favorito: o coração cheio cresce de 0.8 por cima do contorno. */
+.heart {
+  position: relative;
+  display: inline-flex;
+}
+.heart-fill {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: scale(0.8);
+  transition:
+    opacity var(--motion-fast) var(--ease-out),
+    transform var(--motion-base) var(--ease-out);
+}
+.heart[data-on="true"] .heart-fill {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Sacola no header: um pulso único quando entra peça + número que sobe. */
+@keyframes bump {
+  40% {
+    transform: scale(1.12);
+  }
+}
+.bump {
+  animation: bump var(--motion-slow) var(--ease-out);
+}
+
+/* Abas: o sublinhado cresce da esquerda (substitui o text-decoration). */
+.tab-line {
+  position: relative;
+}
+.tab-line::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 8px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--motion-base) var(--ease-out);
+}
+.tab-line[aria-selected="true"]::after {
+  transform: scaleX(1);
+}
+
+/* Skeleton: base bege com um brilho discreto passando (gradiente num pseudo-elemento, só transform). */
+@keyframes shimmer {
+  to {
+    transform: translate3d(100%, 0, 0);
+  }
+}
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: #ece6dd;
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translate3d(-100%, 0, 0);
+  background: linear-gradient(90deg, transparent, rgba(245, 242, 238, 0.55), transparent);
+  animation: shimmer 1.6s var(--ease-standard) infinite;
+}
+
+/* Respeita quem prefere menos movimento: sem deslocamento, sem brilho, sem atraso. */
+@media (prefers-reduced-motion: reduce) {
+  .reveal-on [data-reveal]:not([data-revealed]) {
+    opacity: 1;
+    transform: none;
+  }
+  .skeleton::after {
+    animation: none;
+    display: none;
+  }
+  .press:active:not(:disabled) {
+    transform: none;
+  }
+  .group:hover > .card-frame,
+  .group:hover .card-zoom {
+    transform: none;
   }
 }
 

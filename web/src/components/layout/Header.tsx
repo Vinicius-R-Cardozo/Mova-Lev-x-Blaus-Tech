@@ -43,7 +43,7 @@ export function Header({ categories }: { categories: CategoryDTO[] }) {
     <>
       <header
         className={cn(
-          "sticky top-0 z-header transition-colors duration-300",
+          "sticky top-0 z-header transition-colors duration-slow",
           isHome && "-mb-[64px] md:-mb-header",
           overlay ? "bg-transparent text-offwhite on-dark" : "border-b border-linha bg-offwhite text-preto",
         )}
@@ -101,15 +101,38 @@ export function Header({ categories }: { categories: CategoryDTO[] }) {
               aria-label={`Abrir sacola, ${cart.count} ${cart.count === 1 ? "peça" : "peças"}`}
               className="flex h-11 min-w-touch items-center justify-center gap-1.5 px-1"
             >
-              <BagIcon />
-              <span className="text-[13px] font-normal tabular-nums" aria-hidden>
-                {cart.ready ? cart.count : 0}
-              </span>
+              <BagCount count={cart.ready ? cart.count : 0} ready={cart.ready} />
             </button>
           </div>
         </div>
       </header>
       {menuMounted && <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} categories={categories} />}
+    </>
+  );
+}
+
+/**
+ * Ícone e contador da sacola. Quando entra peça, o ícone dá um pulso único e o
+ * número novo sobe no lugar do antigo. Ao carregar a página (sacola lida do
+ * navegador) e ao remover peças, nada anima.
+ */
+function BagCount({ count, ready }: { count: number; ready: boolean }) {
+  const prev = useRef<number | null>(null);
+  const [bumpKey, setBumpKey] = useState(0);
+  useEffect(() => {
+    if (!ready) return;
+    if (prev.current !== null && count > prev.current) setBumpKey((k) => k + 1);
+    prev.current = count;
+  }, [count, ready]);
+  const animate = bumpKey > 0;
+  return (
+    <>
+      <span key={`icon-${bumpKey}`} className={cn("inline-flex", animate && "bump")}>
+        <BagIcon />
+      </span>
+      <span key={`n-${bumpKey}`} className={cn("text-[13px] font-normal tabular-nums", animate && "swap-up")} aria-hidden>
+        {count}
+      </span>
     </>
   );
 }
@@ -122,7 +145,7 @@ function MobileMenu({ open, onClose, categories }: { open: boolean; onClose: () 
 
   return (
     <div className={cn("fixed inset-0 z-drawer md:hidden", open ? "visible" : "invisible")} aria-hidden={!open}>
-      <div className={cn("absolute inset-0 bg-preto/40 transition-opacity duration-300", open ? "opacity-100" : "opacity-0")} onClick={onClose} />
+      <div className={cn("absolute inset-0 bg-preto/40 transition-opacity duration-base", open ? "opacity-100" : "opacity-0")} onClick={onClose} />
       <div
         ref={ref}
         id="menu-mobile"
@@ -131,7 +154,7 @@ function MobileMenu({ open, onClose, categories }: { open: boolean; onClose: () 
         aria-label="Menu"
         tabIndex={-1}
         className={cn(
-          "absolute inset-y-0 left-0 flex w-[88%] max-w-sm flex-col bg-offwhite transition-transform duration-300 ease-out",
+          "absolute inset-y-0 left-0 flex w-[88%] max-w-sm flex-col bg-offwhite transition-transform duration-slow ease-out",
           open ? "translate-x-0" : "-translate-x-full",
         )}
       >

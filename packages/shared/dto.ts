@@ -43,6 +43,8 @@ export interface ProductCardDTO {
   /** Todas as cores do produto (bolinhas). */
   colors: ColorDTO[];
   image: ImageDTO | null;
+  /** 2ª foto da mesma cor (costas/lateral), mostrada no hover do card. */
+  hoverImage?: ImageDTO | null;
   /** Tamanhos da cor do card, para a compra rápida. */
   sizes: SizeOptionDTO[];
 }

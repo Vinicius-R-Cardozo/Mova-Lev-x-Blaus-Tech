@@ -1,11 +1,12 @@
 "use client";
+import Image from "next/image";
 import Link from "next/link";
 import { useId, useRef, useState } from "react";
 import { SENSATION_LABEL, formatBRL, installmentLabel, type ProductCardDTO, type SizeOptionDTO } from "@movalev/shared";
 import { Media } from "@/components/ui/Media";
 import { SwatchDot } from "@/components/ui/Swatch";
 import { Badge } from "@/components/ui/Badge";
-import { CloseIcon, HeartIcon, PlusIcon } from "@/components/ui/icons";
+import { CloseIcon, FavoriteHeart, PlusIcon } from "@/components/ui/icons";
 import { useCart, type CartLine } from "@/lib/cart";
 import { useFavorites } from "@/lib/favorites";
 import { cn } from "@/lib/cn";
@@ -31,6 +32,7 @@ export function productHref(p: Pick<ProductCardDTO, "slug" | "color">) {
 }
 
 type Variant = "home" | "grid" | "simple";
+const CARD_SIZES = "(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw";
 
 export function ProductCard({ product, variant = "home", priority = false }: { product: ProductCardDTO; variant?: Variant; priority?: boolean }) {
   const href = productHref(product);
@@ -39,17 +41,20 @@ export function ProductCard({ product, variant = "home", priority = false }: { p
 
   return (
     <article className="group relative">
-      <div className="relative">
+      <div className="card-frame">
         <Link href={href} tabIndex={-1} aria-hidden className="block overflow-hidden">
-          <div className="transition-transform duration-300 ease-out group-hover:scale-103 motion-reduce:transform-none">
+          <div className="card-zoom relative">
             <Media
               image={product.image}
               tone={product.color.placeholderHex}
               pictogram={product.pictogram}
               className="aspect-[3/4]"
-              sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+              sizes={CARD_SIZES}
               priority={priority}
             />
+            {product.hoverImage?.url && product.image?.url && (
+              <Image src={product.hoverImage.url} alt="" fill sizes={CARD_SIZES} className="card-alt object-cover" />
+            )}
           </div>
         </Link>
         {product.badge && variant !== "simple" && (
@@ -66,7 +71,7 @@ export function ProductCard({ product, variant = "home", priority = false }: { p
               aria-label={isFav ? `Remover ${product.name} dos favoritos` : `Favoritar ${product.name}`}
               className="icon-btn-round absolute right-1.5 top-1.5 z-10 text-preto"
             >
-              <HeartIcon filled={isFav} width={18} height={18} />
+              <FavoriteHeart on={isFav} width={18} height={18} />
             </button>
             <QuickAdd product={product} />
           </>

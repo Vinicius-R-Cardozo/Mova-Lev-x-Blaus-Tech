@@ -37,7 +37,7 @@ export function ProgressiveDiscountBar({
         aria-valuetext={pricing.progressive.message}
         className="mt-3 h-[5px] w-full bg-[#DAD3C9]"
       >
-        <div className="h-full bg-oliva transition-[width] duration-300 ease-out" style={{ width: `${fill}%` }} />
+        <div className="h-full origin-left bg-oliva transition-transform duration-slow ease-out" style={{ transform: `scaleX(${fill / 100})` }} />
       </div>
       {markers && (
         <ol aria-hidden className="mt-2.5 flex justify-between">

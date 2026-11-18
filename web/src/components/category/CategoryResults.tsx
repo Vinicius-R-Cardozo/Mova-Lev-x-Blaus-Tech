@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { SORT_LABEL, SORTS, type CategoryPageDTO, type ProductCardDTO, type Sort } from "@movalev/shared";
 import { ProductCard } from "@/components/product/ProductCard";
 import { CloseIcon } from "@/components/ui/icons";
+import { SkeletonCard } from "@/components/motion/Skeleton";
 import { API_URL } from "@/lib/site";
 import { useFocusTrap } from "@/lib/useFocusTrap";
 import { cn } from "@/lib/cn";
@@ -90,7 +91,7 @@ export function CategoryResults({ slug, initial }: { slug: string; initial: Cate
         </label>
       </div>
 
-      <div className={cn("transition-opacity", pending && "opacity-50")} aria-busy={pending}>
+      <div className={cn("transition-opacity duration-base", pending && "opacity-50")} aria-busy={pending}>
         <h2 className="sr-only">Peças</h2>
         {items.length === 0 ? (
           <div className="py-24 text-center">
@@ -102,10 +103,17 @@ export function CategoryResults({ slug, initial }: { slug: string; initial: Cate
         ) : (
           <ul className="mt-6 grid grid-cols-2 gap-x-3 gap-y-10 md:mt-6 lg:grid-cols-3 lg:gap-x-4 lg:gap-y-12">
             {items.map((p, i) => (
-              <li key={`${p.id}-${p.color.slug}`}>
+              <li key={`${p.id}-${p.color.slug}`} data-reveal>
                 <ProductCard product={p} variant="grid" priority={i < 3} />
               </li>
             ))}
+            {/* "Carregar mais": a próxima fileira aparece como skeleton até chegar. */}
+            {loading &&
+              Array.from({ length: Math.min(3, initial.total - items.length) }, (_, i) => (
+                <li key={`sk-${i}`} aria-hidden>
+                  <SkeletonCard />
+                </li>
+              ))}
           </ul>
         )}
       </div>
@@ -151,7 +159,7 @@ function MobileDrawer({ open, title, onClose, children }: { open: boolean; title
   useFocusTrap(ref, open, close);
   return (
     <div className={cn("fixed inset-0 z-drawer md:hidden", open ? "visible" : "invisible")} aria-hidden={!open}>
-      <div className={cn("absolute inset-0 bg-preto/40 transition-opacity duration-300", open ? "opacity-100" : "opacity-0")} onClick={onClose} />
+      <div className={cn("absolute inset-0 bg-preto/40 transition-opacity duration-base", open ? "opacity-100" : "opacity-0")} onClick={onClose} />
       <div
         ref={ref}
         role="dialog"
@@ -159,7 +167,7 @@ function MobileDrawer({ open, title, onClose, children }: { open: boolean; title
         aria-label={title}
         tabIndex={-1}
         className={cn(
-          "absolute inset-x-0 bottom-0 max-h-[88vh] overflow-y-auto rounded-t-sheet bg-offwhite px-5 pb-8 pt-3 transition-transform duration-300 ease-out",
+          "absolute inset-x-0 bottom-0 max-h-[88vh] overflow-y-auto rounded-t-sheet bg-offwhite px-5 pb-8 pt-3 transition-transform duration-slow ease-out",
           open ? "translate-y-0" : "translate-y-full",
         )}
       >

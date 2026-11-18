@@ -87,7 +87,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
           </h2>
           <ul className="mt-8 grid grid-cols-2 gap-x-3 gap-y-10 lg:grid-cols-4 lg:gap-x-4">
             {product.youMayLike.map((p) => (
-              <li key={p.id}>
+              <li key={p.id} data-reveal>
                 <ProductCardStatic product={p} />
               </li>
             ))}

@@ -14,7 +14,7 @@ import {
 import { Gallery } from "./Gallery";
 import { cardToCartLine, productHref } from "./ProductCard";
 import { Media } from "@/components/ui/Media";
-import { HeartIcon, MinusIcon, PlusIcon } from "@/components/ui/icons";
+import { FavoriteHeart, MinusIcon, PlusIcon } from "@/components/ui/icons";
 import { defaultSize } from "@/components/home/lookToCart";
 import { useCart } from "@/lib/cart";
 import { useFavorites } from "@/lib/favorites";
@@ -28,6 +28,8 @@ export function ProductView({ product, initialColor }: { product: ProductDetailD
   const [colorSlug, setColorSlug] = useState(initialColor);
   const [size, setSize] = useState<SizeOptionDTO | null>(null);
   const [showSizeError, setShowSizeError] = useState(false);
+  /** Só anima trocas feitas pela cliente (nada pisca ao abrir a página). */
+  const [touched, setTouched] = useState(false);
   const sizesRef = useRef<HTMLDivElement>(null);
   const errorId = useId();
 
@@ -38,6 +40,8 @@ export function ProductView({ product, initialColor }: { product: ProductDetailD
   const nameMain = product.nameEmphasis && product.name.endsWith(product.nameEmphasis) ? product.name.slice(0, -product.nameEmphasis.length).trim() : product.name;
 
   const chooseColor = (slug: string) => {
+    if (slug === colorSlug) return;
+    setTouched(true);
     setColorSlug(slug);
     const next = product.colors.find((c) => c.slug === slug);
     // Mantém o tamanho se existir disponível na nova cor.
@@ -73,7 +77,10 @@ export function ProductView({ product, initialColor }: { product: ProductDetailD
   return (
     <>
       <div className="grid gap-8 lg:grid-cols-[minmax(0,58fr)_minmax(0,42fr)] lg:gap-14">
-        <Gallery images={color.images} tone={color.placeholderHex} pictogram={product.pictogram} name={`${product.name} ${color.name}`} />
+        {/* Troca de cor: as fotos novas entram com fade (no carregamento, não — a 1ª foto é o LCP). */}
+        <div key={color.slug} className={cn(touched && "swap-in")}>
+          <Gallery images={color.images} tone={color.placeholderHex} pictogram={product.pictogram} name={`${product.name} ${color.name}`} />
+        </div>
 
         <div className="pb-8 lg:sticky lg:top-[108px] lg:self-start lg:pb-0">
           <p className="label-sm text-texto-3">{kicker}</p>
@@ -87,7 +94,7 @@ export function ProductView({ product, initialColor }: { product: ProductDetailD
             )}
           </h1>
           <p className="mt-4 flex flex-wrap items-baseline gap-x-2">
-            <span className="text-[24px] font-normal">{formatBRL(price, { compact: true })}</span>
+            <span key={price} className={cn("text-[24px] font-normal", touched && "swap-in")}>{formatBRL(price, { compact: true })}</span>
             <span className="text-body-sm font-light text-texto-2">· {installmentLabel(price)} · 5% off no Pix</span>
           </p>
           <p className="mt-3 text-body-sm font-light text-texto-2">
@@ -115,7 +122,7 @@ export function ProductView({ product, initialColor }: { product: ProductDetailD
                   title={c.name}
                   onClick={() => chooseColor(c.slug)}
                   className={cn(
-                    "h-[46px] w-[46px] rounded-full border border-linha-forte transition-shadow",
+                    "press h-[46px] w-[46px] rounded-full border border-linha-forte transition-[transform,box-shadow]",
                     c.slug === color.slug && "shadow-[0_0_0_3px_#F5F2EE,0_0_0_4px_#1A1A1A]",
                   )}
                   style={{ backgroundColor: c.hex }}
@@ -143,11 +150,12 @@ export function ProductView({ product, initialColor }: { product: ProductDetailD
                   aria-pressed={size?.size === s.size}
                   aria-label={s.available ? `Tamanho ${s.size}` : `Tamanho ${s.size}, esgotado`}
                   onClick={() => {
+                    setTouched(true);
                     setSize(s);
                     setShowSizeError(false);
                   }}
                   className={cn(
-                    "flex h-[54px] items-center justify-center border text-[15px] font-normal transition-colors",
+                    "press flex h-[54px] items-center justify-center border text-[15px] font-normal",
                     size?.size === s.size ? "border-preto bg-preto text-offwhite" : "border-linha-forte hover:border-preto",
                     "disabled:cursor-not-allowed disabled:border-linha disabled:text-texto-2/50 disabled:line-through disabled:hover:border-linha",
                   )}
@@ -172,9 +180,9 @@ export function ProductView({ product, initialColor }: { product: ProductDetailD
               onClick={() => fav.toggle(product.id)}
               aria-pressed={isFav}
               aria-label={isFav ? "Remover dos favoritos" : "Favoritar"}
-              className="flex h-[60px] w-[60px] items-center justify-center border border-linha-forte transition-colors hover:border-preto"
+              className="press flex h-[60px] w-[60px] items-center justify-center border border-linha-forte hover:border-preto"
             >
-              <HeartIcon filled={isFav} />
+              <FavoriteHeart on={isFav} />
             </button>
           </div>
 
@@ -264,7 +272,7 @@ function Details({ product }: { product: ProductDetailDTO }) {
                 {isOpen ? <MinusIcon /> : <PlusIcon />}
               </button>
             </h3>
-            <div id={`painel-${s.id}`} role="region" aria-labelledby={`aba-${s.id}`} hidden={!isOpen} className="pb-6 text-[15px] font-light leading-relaxed text-texto-3">
+            <div id={`painel-${s.id}`} role="region" aria-labelledby={`aba-${s.id}`} hidden={!isOpen} className={cn("pb-6 text-[15px] font-light leading-relaxed text-texto-3", isOpen && "swap-up")}>
               {s.body}
             </div>
           </div>

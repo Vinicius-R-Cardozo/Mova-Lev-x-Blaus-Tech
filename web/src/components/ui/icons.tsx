@@ -39,7 +39,14 @@ export const HeartIcon = ({ filled, ...p }: P & { filled?: boolean }) => (
     <path d="M12 19.5s-7-4.3-7-9.4A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7 2.1c0 5.1-7 9.4-7 9.4z" />
   </svg>
 );
-export const MenuIcon = (p: P) => (
+/** Coração de favorito: o preenchimento cresce sobre o contorno (ver `.heart` no globals.css). */
+export const FavoriteHeart = ({ on, ...p }: P & { on: boolean }) => (
+  <span className="heart" data-on={on} aria-hidden>
+    <HeartIcon {...p} />
+    <HeartIcon {...p} filled className="heart-fill" />
+  </span>
+);
+export const MenuIcon =(p: P) => (
   <svg {...base(p)}>
     <path d="M4 7h16M4 12h16M4 17h16" />
   </svg>

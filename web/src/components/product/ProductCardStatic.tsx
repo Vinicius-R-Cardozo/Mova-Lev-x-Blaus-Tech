@@ -7,8 +7,8 @@ export function ProductCardStatic({ product }: { product: ProductCardDTO }) {
   const href = `/produto/${product.slug}?cor=${product.color.slug}`;
   return (
     <article className="group relative">
-      <div className="overflow-hidden">
-        <div className="transition-transform duration-300 ease-out group-hover:scale-103 motion-reduce:transform-none">
+      <div className="card-frame overflow-hidden">
+        <div className="card-zoom">
           <Media image={product.image} tone={product.color.placeholderHex} pictogram={product.pictogram} className="aspect-[3/4]" sizes="(min-width: 1024px) 25vw, 50vw" pictogramClassName="hidden" />
         </div>
       </div>

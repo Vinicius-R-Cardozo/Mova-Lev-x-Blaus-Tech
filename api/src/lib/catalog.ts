@@ -40,6 +40,9 @@ export function toCard(p: CardProduct, colorSlugOrId?: string): ProductCardDTO {
   if (!pc) throw new Error(`Produto ${p.slug} sem cores`);
   const colorImages = p.images.filter((i) => i.colorId === pc.colorId);
   const front = colorImages.find((i) => i.kind === "FRENTE") ?? colorImages[0] ?? p.images[0] ?? null;
+  // 2ª foto para o hover: costas, senão outra foto publicada (não vídeo) da mesma cor.
+  const photos = colorImages.filter((i) => i !== front && i.kind !== "VIDEO" && i.storagePath);
+  const back = photos.find((i) => i.kind === "COSTAS") ?? photos[0] ?? null;
   return {
     id: p.id,
     slug: p.slug,
@@ -52,6 +55,7 @@ export function toCard(p: CardProduct, colorSlugOrId?: string): ProductCardDTO {
     color: toColor(pc.color),
     colors: p.colors.map((c) => toColor(c.color)),
     image: front ? toImage(front) : null,
+    hoverImage: back ? toImage(back) : null,
     sizes: toSizes(p.variants, pc.colorId, p.priceCents),
   };
 }

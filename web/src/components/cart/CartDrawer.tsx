@@ -26,7 +26,7 @@ export function CartDrawer() {
 
   return (
     <div className={cn("fixed inset-0 z-drawer", cart.isOpen ? "visible" : "invisible")} aria-hidden={!cart.isOpen}>
-      <div className={cn("absolute inset-0 bg-preto/45 transition-opacity duration-300", cart.isOpen ? "opacity-100" : "opacity-0")} onClick={cart.close} />
+      <div className={cn("absolute inset-0 bg-preto/45 transition-opacity duration-base", cart.isOpen ? "opacity-100" : "opacity-0")} onClick={cart.close} />
       <div
         ref={ref}
         role="dialog"
@@ -34,7 +34,7 @@ export function CartDrawer() {
         aria-labelledby="sacola-titulo"
         tabIndex={-1}
         className={cn(
-          "absolute flex flex-col bg-offwhite transition-transform duration-300 ease-out focus:outline-none",
+          "absolute flex flex-col bg-offwhite transition-transform duration-slow ease-out focus:outline-none",
           // mobile: bottom sheet com cantos superiores de 24px
           "inset-x-0 bottom-0 max-h-[92vh] rounded-t-sheet",
           // desktop: gaveta de 460px vinda da direita
@@ -160,7 +160,7 @@ function CartItem({ line }: { line: CartLine }) {
               {line.name}
             </Link>
           </h3>
-          <p className="shrink-0 text-[16px] font-normal">{formatBRL(line.unitPriceCents * line.quantity, { compact: true })}</p>
+          <p key={line.quantity} className="swap-in shrink-0 text-[16px] font-normal">{formatBRL(line.unitPriceCents * line.quantity, { compact: true })}</p>
         </div>
         <p className="mt-1 text-[14px] font-light text-texto-2">
           {line.colorName} · Tamanho {line.size}
@@ -173,19 +173,21 @@ function CartItem({ line }: { line: CartLine }) {
               type="button"
               onClick={() => cart.setQuantity(line.variantId, line.quantity - 1)}
               aria-label={line.quantity === 1 ? `Remover ${line.name}` : "Diminuir quantidade"}
-              className="flex h-11 w-11 items-center justify-center"
+              className="press flex h-11 w-11 items-center justify-center"
             >
               <MinusIcon width={14} height={14} />
             </button>
             <span className="w-6 text-center text-[15px] tabular-nums" aria-live="polite">
-              {line.quantity}
+              <span key={line.quantity} className="swap-up inline-block">
+                {line.quantity}
+              </span>
             </span>
             <button
               type="button"
               onClick={() => cart.setQuantity(line.variantId, line.quantity + 1)}
               disabled={line.quantity >= max}
               aria-label="Aumentar quantidade"
-              className="flex h-11 w-11 items-center justify-center disabled:opacity-30"
+              className="press flex h-11 w-11 items-center justify-center disabled:opacity-30"
             >
               <PlusIcon width={14} height={14} />
             </button>
