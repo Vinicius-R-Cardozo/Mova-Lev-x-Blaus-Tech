@@ -89,7 +89,7 @@ export async function catalogRoutes(app: FastifyInstance) {
 
   // ── Categorias (menu, atalhos, rodapé) ──
   app.get("/catalog/categories", async (_req, reply) => {
-    const rows = await prisma.category.findMany({ orderBy: { sortOrder: "asc" } });
+    const rows = await prisma.category.findMany({ where: { archivedAt: null }, orderBy: { sortOrder: "asc" } });
     cache(reply, 300);
     return [NOVIDADES, ...rows.map(toCategory)];
   });
@@ -98,7 +98,7 @@ export async function catalogRoutes(app: FastifyInstance) {
   app.get("/catalog/home", async (_req, reply): Promise<HomeDTO> => {
     const [setting, categories, newest, best] = await Promise.all([
       prisma.setting.findUnique({ where: { key: "home" } }),
-      prisma.category.findMany({ orderBy: { sortOrder: "asc" } }),
+      prisma.category.findMany({ where: { archivedAt: null }, orderBy: { sortOrder: "asc" } }),
       prisma.product.findMany({ where: { status: "ACTIVE" }, orderBy: { publishedAt: "desc" }, take: 4, include: cardInclude }),
       prisma.product.findMany({ where: { status: "ACTIVE" }, orderBy: { salesCount: "desc" }, take: 4, include: cardInclude }),
     ]);
@@ -130,12 +130,14 @@ export async function catalogRoutes(app: FastifyInstance) {
     const slug = z.string().regex(/^[a-z0-9-]+$/).max(60).parse(req.params.slug);
 
     let category: CategoryDTO;
+    let categoryId: string | null = null;
     const productWhere: Prisma.ProductWhereInput = { status: "ACTIVE" };
     if (slug === NOVIDADES.slug) {
       category = NOVIDADES;
     } else {
       const row = await prisma.category.findUnique({ where: { slug } });
-      if (!row) return notFound(reply, "Categoria não encontrada.");
+      if (!row || row.archivedAt) return notFound(reply, "Categoria não encontrada.");
+      categoryId = row.id;
       category = toCategory(row);
       productWhere.categories = { some: { categoryId: row.id } };
     }
@@ -184,15 +186,31 @@ export async function catalogRoutes(app: FastifyInstance) {
             ? [{ product: { priceCents: "desc" } }, { sortOrder: "asc" }]
             : [{ product: { relevance: "desc" } }, { sortOrder: "asc" }];
 
+    // "Relevância" numa categoria: a ordem definida no painel (categoria → produtos) e,
+    // empatando, a relevância do produto. Ordenar por relação 1:N não dá no banco,
+    // então ordena aqui (categorias têm dezenas de itens, não milhares).
+    const curated = sort === "relevancia" && categoryId;
     const [total, rows] = await Promise.all([
       prisma.productColor.count({ where }),
-      prisma.productColor.findMany({
-        where,
-        orderBy,
-        skip: (q.pagina - 1) * q.porPagina,
-        take: q.porPagina,
-        include: { product: { include: cardInclude } },
-      }),
+      curated
+        ? prisma.productColor
+            .findMany({
+              where,
+              orderBy,
+              include: { product: { include: { ...cardInclude, categories: { where: { categoryId: categoryId! }, select: { sortOrder: true } } } } },
+            })
+            .then((all) =>
+              all
+                .sort((a, b) => (a.product.categories[0]?.sortOrder ?? 9999) - (b.product.categories[0]?.sortOrder ?? 9999))
+                .slice((q.pagina - 1) * q.porPagina, q.pagina * q.porPagina),
+            )
+        : prisma.productColor.findMany({
+            where,
+            orderBy,
+            skip: (q.pagina - 1) * q.porPagina,
+            take: q.porPagina,
+            include: { product: { include: cardInclude } },
+          }),
     ]);
 
     cache(reply, 60);
@@ -220,7 +238,7 @@ export async function catalogRoutes(app: FastifyInstance) {
       include: {
         ...cardInclude,
         collection: true,
-        categories: { include: { category: true }, orderBy: { sortOrder: "asc" } },
+        categories: { where: { category: { archivedAt: null } }, include: { category: true }, orderBy: { sortOrder: "asc" } },
         related: { include: { related: { include: cardInclude } }, orderBy: { sortOrder: "asc" } },
       },
     });
@@ -293,7 +311,7 @@ export async function catalogRoutes(app: FastifyInstance) {
   app.get("/catalog/slugs", async (_req, reply) => {
     const [products, categories] = await Promise.all([
       prisma.product.findMany({ where: { status: "ACTIVE" }, select: { slug: true, updatedAt: true } }),
-      prisma.category.findMany({ select: { slug: true } }),
+      prisma.category.findMany({ where: { archivedAt: null }, select: { slug: true } }),
     ]);
     cache(reply, 600);
     return { products, categories: [NOVIDADES.slug, ...categories.map((c) => c.slug)] };

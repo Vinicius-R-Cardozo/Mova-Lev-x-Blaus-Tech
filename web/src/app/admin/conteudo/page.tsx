@@ -1,11 +1,11 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
-import { adminCollectionSchema, homeContentSchema, slugify, type HomeContent } from "@movalev/shared";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { homeContentSchema, type HomeContent } from "@movalev/shared";
 import { useAuth } from "@/lib/auth";
 import { Card, Input, Notice, PageTitle, Select, Textarea } from "@/components/admin/ui";
 
 type MetaProduct = { id: string; name: string; slug: string; colors: { color: { slug: string; name: string } }[] };
-type Collection = { id: string; slug: string; name: string; season: string | null; description: string | null; _count: { products: number } };
 
 function ProductColorPicker({ products, value, onChange, label }: { products: MetaProduct[]; value: { productSlug: string; colorSlug: string }; onChange: (v: { productSlug: string; colorSlug: string }) => void; label: string }) {
   const p = products.find((x) => x.slug === value.productSlug);
@@ -28,16 +28,12 @@ export default function ConteudoPage() {
   const { apiFetch } = useAuth();
   const [home, setHome] = useState<HomeContent | null>(null);
   const [products, setProducts] = useState<MetaProduct[]>([]);
-  const [collections, setCollections] = useState<Collection[]>([]);
-  const [col, setCol] = useState<{ id?: string; slug: string; name: string; season: string; description: string } | null>(null);
   const [notice, setNotice] = useState<{ kind: "ok" | "erro"; text: string } | null>(null);
 
-  const loadCollections = useCallback(() => apiFetch<Collection[]>("/admin/collections").then(setCollections), [apiFetch]);
   useEffect(() => {
     apiFetch<HomeContent>("/admin/settings/home").then(setHome);
     apiFetch<{ products: MetaProduct[] }>("/admin/meta").then((m) => setProducts(m.products));
-    void loadCollections();
-  }, [apiFetch, loadCollections]);
+  }, [apiFetch]);
 
   async function saveHome() {
     const parsed = homeContentSchema.safeParse(home);
@@ -45,21 +41,6 @@ export default function ConteudoPage() {
     try {
       await apiFetch("/admin/settings/home", { method: "PUT", body: JSON.stringify(parsed.data) });
       setNotice({ kind: "ok", text: "Home salva. A loja atualiza em instantes." });
-    } catch (err) {
-      setNotice({ kind: "erro", text: err instanceof Error ? err.message : "Erro." });
-    }
-  }
-
-  async function saveCollection() {
-    if (!col) return;
-    const parsed = adminCollectionSchema.safeParse({ ...col, slug: col.slug || slugify(col.name), season: col.season || null, description: col.description || null });
-    if (!parsed.success) return setNotice({ kind: "erro", text: parsed.error.issues[0]?.message ?? "Coleção inválida." });
-    try {
-      if (col.id) await apiFetch(`/admin/collections/${col.id}`, { method: "PUT", body: JSON.stringify(parsed.data) });
-      else await apiFetch("/admin/collections", { method: "POST", body: JSON.stringify(parsed.data), idempotencyKey: crypto.randomUUID() });
-      setCol(null);
-      setNotice({ kind: "ok", text: "Coleção salva." });
-      await loadCollections();
     } catch (err) {
       setNotice({ kind: "erro", text: err instanceof Error ? err.message : "Erro." });
     }
@@ -121,29 +102,9 @@ export default function ConteudoPage() {
         </div>
       </Card>
 
-      <Card title="Coleções" className="mt-4" actions={!col && <button type="button" onClick={() => setCol({ slug: "", name: "", season: "", description: "" })} className="btn-secondary h-10 px-4">Nova coleção</button>}>
-        {col ? (
-          <div className="grid gap-4 md:grid-cols-2">
-            <Input label="Nome" value={col.name} onChange={(e) => setCol({ ...col, name: e.target.value })} />
-            <Input label="Slug" value={col.slug} placeholder={slugify(col.name)} onChange={(e) => setCol({ ...col, slug: e.target.value })} />
-            <Input label="Estação" value={col.season} onChange={(e) => setCol({ ...col, season: e.target.value })} />
-            <Input label="Descrição" value={col.description} onChange={(e) => setCol({ ...col, description: e.target.value })} />
-            <div className="flex gap-3 md:col-span-2">
-              <button type="button" onClick={() => void saveCollection()} className="btn-primary h-11 px-6">Salvar coleção</button>
-              <button type="button" onClick={() => setCol(null)} className="btn-secondary h-11 px-6">Cancelar</button>
-            </div>
-          </div>
-        ) : (
-          <ul className="divide-y divide-linha">
-            {collections.map((c) => (
-              <li key={c.id} className="flex items-center justify-between py-2 text-[14px]">
-                <span>{c.name} <span className="text-texto-2">· {c.season ?? "—"} · {c._count.products} peças</span></span>
-                <button type="button" onClick={() => setCol({ id: c.id, slug: c.slug, name: c.name, season: c.season ?? "", description: c.description ?? "" })} className="min-h-touch underline">Editar</button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
+      <p className="mt-4 text-[14px] text-texto-2">
+        Coleções e categorias agora têm telas próprias: <Link href="/admin/colecoes" className="underline">Coleções</Link> · <Link href="/admin/categorias" className="underline">Categorias</Link>.
+      </p>
     </>
   );
 }

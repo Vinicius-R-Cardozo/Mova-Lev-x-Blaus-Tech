@@ -162,11 +162,39 @@ export const adminShippingSchema = z.object({
     }, "Cada UF só pode estar em uma região ativa"),
 });
 
+const slugField = z.string().trim().regex(/^[a-z0-9-]+$/, "Só letras minúsculas, números e hífen").min(2).max(60);
+const imageUrl = z.string().trim().url("URL inválida").max(500).nullable().optional();
+
 export const adminCollectionSchema = z.object({
-  slug: z.string().trim().regex(/^[a-z0-9-]+$/).max(60),
-  name: z.string().trim().min(2).max(60),
+  slug: slugField,
+  name: z.string().trim().min(2, "Nome obrigatório").max(60),
   season: z.string().trim().max(40).nullable().optional(),
   description: z.string().trim().max(400).nullable().optional(),
+  coverUrl: imageUrl,
+});
+export type AdminCollectionInput = z.infer<typeof adminCollectionSchema>;
+
+export const adminCategorySchema = z.object({
+  slug: slugField,
+  name: z.string().trim().min(2, "Nome obrigatório").max(60),
+  description: z.string().trim().max(400).nullable().optional(),
+  bannerCaption: z.string().trim().max(120).nullable().optional(),
+  bannerUrl: imageUrl,
+  pictogram: z.enum(PICTOGRAMS),
+  tone: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Cor em hexadecimal, ex.: #E6D5C5"),
+  showInMenu: z.boolean(),
+});
+export type AdminCategoryInput = z.infer<typeof adminCategorySchema>;
+
+/** Nova ordem (lista de ids na ordem desejada). */
+export const adminOrderSchema = z.object({ ids: z.array(uuid).min(1).max(500) });
+/** Produtos de uma categoria/coleção, na ordem desejada. */
+export const adminGroupProductsSchema = z.object({ productIds: z.array(uuid).max(500) });
+export const adminCoverSignSchema = z.object({
+  kind: z.enum(["categoria", "colecao"]),
+  id: uuid,
+  contentType: z.enum(["image/jpeg", "image/png", "image/webp", "image/avif"]),
+  size: z.number().int().min(1).max(10 * 1024 * 1024, "Máximo de 10 MB"),
 });
 
 // ───────────────────────────── Acesso ao painel ─────────────────────────────

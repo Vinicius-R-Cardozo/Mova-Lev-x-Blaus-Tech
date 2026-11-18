@@ -5,6 +5,7 @@ import { adminCatalogRoutes } from "./catalog";
 import { adminOperationsRoutes } from "./operations";
 import { adminSystemRoutes } from "./system";
 import { adminStockRoutes } from "./stock";
+import { adminGroupingRoutes } from "./groupings";
 
 declare module "fastify" {
   interface FastifyContextConfig {
@@ -37,5 +38,6 @@ export async function adminRoutes(app: FastifyInstance) {
   await app.register(adminSystemRoutes);
   await app.register(adminCatalogRoutes);
   await app.register(adminStockRoutes);
+  await app.register(adminGroupingRoutes);
   await app.register(adminOperationsRoutes);
 }

@@ -131,6 +131,11 @@ model Collection {
   name        String
   season      String?
   description String?
+  /// Imagem de capa (URL pública).
+  coverUrl    String?
+  sortOrder   Int       @default(0)
+  /// Arquivada (exclusão lógica): some do painel de produtos e da loja.
+  archivedAt  DateTime?
   createdAt   DateTime  @default(now())
   products    Product[]
 
@@ -149,6 +154,8 @@ model Category {
   tone          String            @default("#E6D5C5")
   sortOrder     Int               @default(0)
   showInMenu    Boolean           @default(false)
+  /// Arquivada (exclusão lógica): some da loja e do menu; pode ser restaurada.
+  archivedAt    DateTime?
   products      ProductCategory[]
 
   @@map("categories")

@@ -3,7 +3,6 @@ import type { FastifyInstance, FastifyReply } from "fastify";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import {
-  adminCollectionSchema,
   adminImageCreateSchema,
   adminImageOrderSchema,
   adminImageUpdateSchema,
@@ -105,11 +104,11 @@ export async function adminCatalogRoutes(app: FastifyInstance) {
   app.get("/admin/meta", { config: { allow: "staff" } }, async () => {
     const [colors, categories, collections, products] = await Promise.all([
       prisma.color.findMany({ orderBy: { sortOrder: "asc" } }),
-      prisma.category.findMany({ orderBy: { sortOrder: "asc" } }),
-      prisma.collection.findMany({ orderBy: { name: "asc" } }),
+      prisma.category.findMany({ where: { archivedAt: null }, orderBy: { sortOrder: "asc" } }),
+      prisma.collection.findMany({ where: { archivedAt: null }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }] }),
       prisma.product.findMany({
         where: { status: { not: "ARCHIVED" } },
-        select: { id: true, name: true, slug: true, colors: { select: { color: { select: { slug: true, name: true } } }, orderBy: { sortOrder: "asc" } } },
+        select: { id: true, name: true, slug: true, status: true, collectionId: true, colors: { select: { color: { select: { slug: true, name: true } } }, orderBy: { sortOrder: "asc" } } },
         orderBy: { name: "asc" },
       }),
     ]);
@@ -424,34 +423,6 @@ export async function adminCatalogRoutes(app: FastifyInstance) {
     await audit(req, { action: "image.delete", entity: "produto", entityId: image.productId, summary: `Excluiu foto (${image.kind})`, before: { storagePath: image.storagePath, alt: image.alt } });
     revalidateStore(["catalog", "home"]);
     return reply.code(204).send();
-  });
-
-  // ── Coleções ──
-  app.get("/admin/collections", { config: { allow: "staff" } }, async () => prisma.collection.findMany({ orderBy: { name: "asc" }, include: { _count: { select: { products: true } } } }));
-
-  app.post("/admin/collections", { config: { allow: "staff" } }, async (req, reply) =>
-    withIdempotency(req, reply, "admin-collection", async () => {
-      const input = adminCollectionSchema.parse(req.body);
-      try {
-        const c = await prisma.collection.create({ data: input });
-        await audit(req, { action: "collection.create", entity: "colecao", entityId: c.id, summary: `Criou a coleção "${c.name}"`, after: input });
-        return { status: 201, body: c };
-      } catch (err) {
-        throw uniqueViolation(err);
-      }
-    }),
-  );
-
-  app.put<{ Params: { id: string } }>("/admin/collections/:id", { config: { allow: "staff" } }, async (req) => {
-    const input = adminCollectionSchema.parse(req.body);
-    try {
-      const c = await prisma.collection.update({ where: { id: id.parse(req.params.id) }, data: input });
-      await audit(req, { action: "collection.update", entity: "colecao", entityId: c.id, summary: `Editou a coleção "${c.name}"`, after: input });
-      revalidateStore(["catalog"]);
-      return c;
-    } catch (err) {
-      throw uniqueViolation(err);
-    }
   });
 
   // ── Conteúdo da Home (hero, Na campanha, Compre o look, Studio…) ──
