@@ -91,6 +91,19 @@ const HOME = {
   ],
 };
 
+/**
+ * Compre o look combinando com a foto (top + legging verde-oliva). Pontos em % da
+ * FOTO (o site converte para o recorte de cada tela).
+ */
+const LOOK = {
+  titleEmphasis: "em oliva",
+  note: "Levando as 2 peças: 10% off aplicado na sacola.",
+  items: [
+    { productSlug: "top-respiro-alcas-finas", colorSlug: "verde-oliva", hotspot: { x: 52, y: 55 } },
+    { productSlug: "legging-respiro-cintura-alta", colorSlug: "verde-oliva", hotspot: { x: 58, y: 82 } },
+  ],
+};
+
 const BACKUP_KEY = "home_demo_backup";
 const enviadas = new Map<string, string>();
 
@@ -149,6 +162,7 @@ async function aplicar() {
   const home = structuredClone(original);
   home.hero.posterUrl ??= await url(HOME.hero, "largo");
   home.shopTheLook.imageUrl ??= await url(HOME.look, "retrato");
+  if (home.shopTheLook.imageUrl.includes("/demo/")) Object.assign(home.shopTheLook, LOOK);
   for (const [i, s] of home.sensations.entries()) if (HOME.sensations[i]) s.imageUrl ??= await url(HOME.sensations[i]!, "retrato");
   for (const [i, c] of home.studio.classes.entries()) if (HOME.studio[i]) c.imageUrl ??= await url(HOME.studio[i]!, "retrato");
   for (const [i, t] of home.instagram.tiles.entries()) t.imageUrl ??= await url(HOME.instagram[i % HOME.instagram.length]!, "quadrado");
