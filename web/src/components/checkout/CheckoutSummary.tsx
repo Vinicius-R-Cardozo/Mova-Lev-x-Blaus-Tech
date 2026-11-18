@@ -1,6 +1,6 @@
 "use client";
 import { useState, type FormEvent } from "react";
-import { formatBRL, installmentLabel, type CartLineDTO, type PricingResult, type PricingTier } from "@movalev/shared";
+import { formatBRL, type CartLineDTO, type PricingResult, type PricingTier } from "@movalev/shared";
 import { Media } from "@/components/ui/Media";
 import { ProgressiveDiscountBar } from "@/components/cart/ProgressiveDiscountBar";
 
@@ -110,7 +110,7 @@ export function CheckoutSummary({ lines, pricing, tiers, couponCode, onApplyCoup
         </div>
       </dl>
       <p className="mt-2 text-[14px] font-light text-texto-2">
-        ou {installmentLabel(pricing.totalCents)} · no Pix {formatBRL(pricing.pixTotalCents)}
+        {[pricing.installments.count > 1 && `ou ${pricing.installments.count}x de ${formatBRL(pricing.installments.valueCents)} sem juros`, pricing.pixTotalCents < pricing.totalCents && `no Pix ${formatBRL(pricing.pixTotalCents)}`].filter(Boolean).join(" · ")}
       </p>
     </section>
   );

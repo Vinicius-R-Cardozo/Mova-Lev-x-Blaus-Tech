@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useCallback, useRef } from "react";
-import { formatBRL, installmentLabel } from "@movalev/shared";
+import { formatBRL } from "@movalev/shared";
 import { Media } from "@/components/ui/Media";
 import { CloseIcon, MinusIcon, PlusIcon } from "@/components/ui/icons";
 import { cardToCartLine } from "@/components/product/ProductCard";
@@ -110,7 +110,7 @@ export function CartDrawer() {
                   <dd>{formatBRL(pricing.totalCents)}</dd>
                 </div>
               </dl>
-              <p className="mt-1 text-[14px] font-light text-texto-2">ou {installmentLabel(pricing.totalCents)}</p>
+              {pricing.installments.count > 1 && <p className="mt-1 text-[14px] font-light text-texto-2">ou {pricing.installments.count}x de {formatBRL(pricing.installments.valueCents)} sem juros</p>}
               {hasSoldOut && (
                 <p role="alert" className="mt-3 text-body-sm text-erro">
                   Remova os itens esgotados para finalizar.

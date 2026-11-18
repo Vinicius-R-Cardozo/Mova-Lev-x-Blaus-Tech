@@ -1,4 +1,6 @@
 import type { FastifyInstance, FastifyReply } from "fastify";
+import type { StoreConfigDTO } from "@movalev/shared";
+import { paymentSettings, storeSettings } from "../lib/settings";
 import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 import {
@@ -85,6 +87,13 @@ export async function catalogRoutes(app: FastifyInstance) {
       reply.header("X-Cache", "MISS");
     }
     return payload;
+  });
+
+  // ── Loja: dados da empresa, canais e formas de pagamento (rodapé, páginas legais, checkout) ──
+  app.get("/catalog/store", async (_req, reply): Promise<StoreConfigDTO> => {
+    const [store, payments] = await Promise.all([storeSettings(), paymentSettings()]);
+    cache(reply, 60);
+    return { store, payments };
   });
 
   // ── Categorias (menu, atalhos, rodapé) ──

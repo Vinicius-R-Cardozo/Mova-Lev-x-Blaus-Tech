@@ -106,7 +106,7 @@ export default async function ConfirmationPage({ params, searchParams }: Props) 
             </div>
             {o.pixDiscountCents > 0 && (
               <div className="flex justify-between text-oliva">
-                <dt>Pix 5% off</dt>
+                <dt>Desconto no Pix</dt>
                 <dd>{formatBRL(-o.pixDiscountCents)}</dd>
               </div>
             )}

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { InfoPage } from "@/components/institutional/InfoPage";
 import { ContactForm } from "@/components/institutional/ContactForm";
-import { COMPANY } from "@/lib/company";
+import { getCompany } from "@/lib/company";
 
 export const metadata: Metadata = {
   title: "Contato",
@@ -10,7 +10,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/contato" },
 };
 
-export default function ContatoPage() {
+export default async function ContatoPage() {
+  const COMPANY = await getCompany();
   return (
     <InfoPage slug="contato" kicker="Ajuda" title="Fale" emphasis="com a gente" intro="Respondemos em até 1 dia útil. Se for sobre um pedido, informe o número — ele está no e-mail de confirmação.">
       <h2 id="canais">Canais</h2>

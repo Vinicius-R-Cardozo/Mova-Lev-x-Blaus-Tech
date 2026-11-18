@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { InfoPage } from "@/components/institutional/InfoPage";
-import { COMPANY } from "@/lib/company";
+import { getCompany } from "@/lib/company";
 
 export const metadata: Metadata = {
   title: "Trocas, devoluções e entregas",
@@ -9,7 +9,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/trocas-e-devolucoes" },
 };
 
-export default function TrocasPage() {
+export default async function TrocasPage() {
+  const COMPANY = await getCompany();
   return (
     <InfoPage
       slug="trocas-e-devolucoes"

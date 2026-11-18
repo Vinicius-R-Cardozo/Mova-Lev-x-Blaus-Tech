@@ -12,7 +12,7 @@
  *   5. total, parcelas (6x sem juros) e Pix (5% off)
  * Tudo em centavos inteiros, arredondando cada desconto em centavos.
  */
-import { MAX_INSTALLMENTS, formatBRL, installmentCents, percentOf, pixTotalCents } from "./money";
+import { MAX_INSTALLMENTS, MIN_INSTALLMENT_CENTS, PIX_DISCOUNT_PERCENT, formatBRL, installmentCents, installmentsFor, percentOf, pixTotalCents } from "./money";
 
 export interface PricingTier {
   minItems: number;
@@ -50,6 +50,8 @@ export interface PricingInput {
   shippingCents?: number | null;
   /** O método escolhido participa do frete grátis? (padrão: sim; expressa: não). */
   shippingEligibleForFree?: boolean;
+  /** Regras de pagamento do painel (parcelas e desconto do Pix); padrão 6x e 5%. */
+  payments?: { maxInstallments: number; minInstallmentCents: number; pixDiscountPercent: number };
 }
 
 export interface PricingResult {
@@ -187,7 +189,10 @@ export function computePricing(input: PricingInput): PricingResult {
     freeShipping,
     shippingCents,
     totalCents,
-    installments: { count: MAX_INSTALLMENTS, valueCents: installmentCents(totalCents) },
-    pixTotalCents: pixTotalCents(totalCents),
+    installments: (() => {
+      const count = installmentsFor(totalCents, input.payments?.maxInstallments ?? MAX_INSTALLMENTS, input.payments?.minInstallmentCents ?? MIN_INSTALLMENT_CENTS);
+      return { count, valueCents: installmentCents(totalCents, count) };
+    })(),
+    pixTotalCents: pixTotalCents(totalCents, input.payments?.pixDiscountPercent ?? PIX_DISCOUNT_PERCENT),
   };
 }

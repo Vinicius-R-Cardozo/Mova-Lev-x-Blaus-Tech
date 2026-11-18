@@ -64,7 +64,7 @@ export async function adminGroupingRoutes(app: FastifyInstance) {
     try {
       const c = await prisma.category.create({ data: { ...input, sortOrder: (last._max.sortOrder ?? -1) + 1 } });
       await audit(req, { action: "category.create", entity: "categoria", entityId: c.id, summary: `Criou a categoria "${c.name}"`, after: input });
-      revalidateStore(["catalog", "home"]);
+      revalidateStore(["catalog", "home", "categories"]);
       return reply.code(201).send(c);
     } catch (err) {
       throw duplicate(err);
@@ -80,7 +80,7 @@ export async function adminGroupingRoutes(app: FastifyInstance) {
       const c = await prisma.category.update({ where: { id: categoryId }, data: input });
       const d = diffSummary(prev, c, { name: "Nome", slug: "Endereço", showInMenu: "No menu", bannerUrl: "Capa", tone: "Cor" });
       await audit(req, { action: "category.update", entity: "categoria", entityId: c.id, summary: `Categoria "${c.name}"${d.summary ? ` — ${d.summary}` : ": textos"}`, before: d.before, after: d.after });
-      revalidateStore(["catalog", "home"]);
+      revalidateStore(["catalog", "home", "categories"]);
       return c;
     } catch (err) {
       throw duplicate(err);
@@ -91,7 +91,7 @@ export async function adminGroupingRoutes(app: FastifyInstance) {
     const { ids } = adminOrderSchema.parse(req.body);
     await prisma.$transaction(ids.map((cid, i) => prisma.category.updateMany({ where: { id: cid }, data: { sortOrder: i } })));
     await audit(req, { action: "category.reorder", entity: "categoria", summary: "Reordenou as categorias", after: ids });
-    revalidateStore(["catalog", "home"]);
+    revalidateStore(["catalog", "home", "categories"]);
     return { ok: true };
   });
 
@@ -112,7 +112,7 @@ export async function adminGroupingRoutes(app: FastifyInstance) {
     const added = unique.filter((x) => !before.includes(x)).length;
     const removed = before.filter((x) => !unique.includes(x)).length;
     await audit(req, { action: "category.products", entity: "categoria", entityId: categoryId, summary: `Categoria "${c.name}": ${unique.length} produtos (+${added} / −${removed}, ordem atualizada)`, before, after: unique });
-    revalidateStore(["catalog", "home"]);
+    revalidateStore(["catalog", "home", "categories"]);
     return { ok: true, count: unique.length };
   });
 
@@ -217,7 +217,7 @@ function registerLifecycle(app: FastifyInstance, kind: "categoria" | "colecao") 
     if (!g.archivedAt) {
       await setArchived(gid, new Date());
       await audit(req, { action: `${kind}.archive`, entity: kind, entityId: gid, summary: `Arquivou a ${label} "${g.name}"` });
-      revalidateStore(["catalog", "home"]);
+      revalidateStore(["catalog", "home", "categories"]);
     }
     return { ok: true };
   });
@@ -229,7 +229,7 @@ function registerLifecycle(app: FastifyInstance, kind: "categoria" | "colecao") 
     if (g.archivedAt) {
       await setArchived(gid, null);
       await audit(req, { action: `${kind}.restore`, entity: kind, entityId: gid, summary: `Restaurou a ${label} "${g.name}"` });
-      revalidateStore(["catalog", "home"]);
+      revalidateStore(["catalog", "home", "categories"]);
     }
     return { ok: true };
   });
@@ -243,7 +243,7 @@ function registerLifecycle(app: FastifyInstance, kind: "categoria" | "colecao") 
     if (kind === "categoria") await prisma.category.delete({ where: { id: gid } });
     else await prisma.collection.delete({ where: { id: gid } });
     await audit(req, { action: `${kind}.delete`, entity: kind, entityId: gid, summary: `Excluiu de vez a ${label} "${g.name}" (os produtos continuam)` });
-    revalidateStore(["catalog", "home"]);
+    revalidateStore(["catalog", "home", "categories"]);
     return reply.code(204).send();
   });
 }

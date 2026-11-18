@@ -1,9 +1,10 @@
 "use client";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { DEFAULT_TIERS, computePricing, type CartLineDTO, type CartQuoteDTO, type PricingResult, type PricingTier, type ProductCardDTO } from "@movalev/shared";
+import { DEFAULT_TIERS, computePricing, pricingPaymentsOf, type CartLineDTO, type CartQuoteDTO, type PricingResult, type PricingTier, type ProductCardDTO } from "@movalev/shared";
 import { API_URL } from "./site";
 import { readJSON, writeJSON } from "./storage";
 import { useAuth } from "./auth";
+import { useStoreConfig } from "./storeConfig";
 
 /**
  * Sacola: guardada no navegador para visitantes e sincronizada com a conta após o login.
@@ -152,6 +153,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 
   const tiers = quote?.tiers ?? DEFAULT_TIERS;
+  const storeConfig = useStoreConfig();
   const syncing = quotedSig !== sig;
   // Enquanto o servidor não responde, calcula localmente com a mesma regra.
   const pricing = useMemo(() => {
@@ -161,8 +163,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       items: buyable.map((l) => ({ unitPriceCents: l.unitPriceCents, quantity: l.quantity })),
       tiers,
       freeShippingThresholdCents: quote?.pricing.freeShipping.thresholdCents,
+      payments: pricingPaymentsOf(storeConfig.payments),
     });
-  }, [quote, syncing, lines, tiers]);
+  }, [quote, syncing, lines, tiers, storeConfig.payments]);
 
   const value = useMemo<CartState>(
     () => ({

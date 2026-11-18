@@ -13,12 +13,14 @@ export interface OrderEmailData {
   shippingCents: number;
   totalCents: number;
   paymentMethod: "PIX" | "CARTAO" | "BOLETO";
+  /** Parcelas escolhidas (cartão). */
+  installments: number;
   payableCents: number;
   orderUrl: string;
 }
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
-const PAY: Record<OrderEmailData["paymentMethod"], string> = { PIX: "Pix (5% off)", CARTAO: "Cartão em até 6x", BOLETO: "Boleto" };
+const PAY: Record<OrderEmailData["paymentMethod"], string> = { PIX: "Pix", CARTAO: "Cartão", BOLETO: "Boleto" };
 
 export function orderConfirmationEmail(d: OrderEmailData) {
   const first = d.customerName.split(" ")[0] ?? d.customerName;
@@ -44,7 +46,7 @@ ${d.progressiveDiscountCents ? row(`Desconto progressivo (${d.progressivePercent
 ${d.couponDiscountCents ? row(`Cupom ${esc(d.couponCode ?? "")}`, formatBRL(-d.couponDiscountCents), "#4D5A3A") : ""}
 ${row(`Frete · ${esc(d.shippingLabel)}`, d.shippingCents ? formatBRL(d.shippingCents) : "Grátis")}
 <tr><td style="padding:12px 0 0;font-size:20px">Total</td><td style="padding:12px 0 0;font-size:20px;text-align:right">${formatBRL(d.totalCents)}</td></tr>
-<tr><td colspan="2" style="padding:4px 0 0;font-size:13px;color:#5E564D">Pagamento: ${PAY[d.paymentMethod]} · ${d.paymentMethod === "PIX" ? `${formatBRL(d.payableCents)} no Pix` : d.paymentMethod === "CARTAO" ? installmentLabel(d.totalCents) : formatBRL(d.payableCents)}</td></tr>
+<tr><td colspan="2" style="padding:4px 0 0;font-size:13px;color:#5E564D">Pagamento: ${PAY[d.paymentMethod]} · ${d.paymentMethod === "PIX" ? `${formatBRL(d.payableCents)} no Pix` : d.paymentMethod === "CARTAO" ? installmentLabel(d.totalCents, d.installments) : formatBRL(d.payableCents)}</td></tr>
 </table></td></tr>
 <tr><td style="padding:8px 32px 32px"><a href="${d.orderUrl}" style="display:inline-block;background:#4D5A3A;color:#F5F2EE;text-decoration:none;font-size:12px;letter-spacing:.2em;padding:16px 28px">VER MEU PEDIDO</a></td></tr>
 <tr><td style="padding:20px 32px;background:#ECE6DD;font-size:12px;color:#5E564D">© MOVA LEV · Movimento é vida. Dúvidas? Responda este e-mail.</td></tr>

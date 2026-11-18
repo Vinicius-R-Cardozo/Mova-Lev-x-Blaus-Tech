@@ -282,3 +282,12 @@ export const adminMovementListSchema = z.object({
 });
 
 export const adminStockSettingsSchema = z.object({ lowStockThreshold: z.number().int().min(0).max(1000) });
+
+// ───────────────────────────── Usuários do painel ─────────────────────────────
+
+export const adminUserInviteSchema = z.object({
+  email: z.string().trim().toLowerCase().email("E-mail inválido").max(160),
+  name: z.string().trim().max(120).optional(),
+  role: z.enum(ADMIN_ROLES),
+});
+export const adminUserRoleSchema = z.object({ role: z.enum(ADMIN_ROLES) });

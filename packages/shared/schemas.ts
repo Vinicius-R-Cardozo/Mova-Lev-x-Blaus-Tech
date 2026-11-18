@@ -134,7 +134,7 @@ export const orderInputSchema = z
     items: z.array(z.object({ variantId: z.string().uuid(), quantity: z.number().int().min(1).max(20) })).min(1).max(50),
     couponCode: z.string().trim().toUpperCase().max(40).optional(),
     shipping: z.object({ method: z.enum(SHIPPING_METHODS), address: addressSchema.optional() }),
-    payment: z.object({ method: z.enum(PAYMENT_METHODS), installments: z.number().int().min(1).max(6).default(1) }),
+    payment: z.object({ method: z.enum(PAYMENT_METHODS), installments: z.number().int().min(1).max(12).default(1) }),
     acceptsNewsletter: z.boolean().optional(),
   })
   .refine((o) => o.shipping.method === "RETIRADA" || !!o.shipping.address, { message: "Endereço de entrega obrigatório", path: ["shipping", "address"] });

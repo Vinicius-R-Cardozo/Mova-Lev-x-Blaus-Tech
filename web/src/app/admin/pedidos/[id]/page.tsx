@@ -132,7 +132,7 @@ export default function PedidoAdminPage() {
               {o.progressiveDiscountCents > 0 && <Line label={`Progressivo (${o.progressivePercent}%)`} value={formatBRL(-o.progressiveDiscountCents)} tone="oliva" />}
               {o.couponDiscountCents > 0 && <Line label={`Cupom ${o.couponCode}`} value={formatBRL(-o.couponDiscountCents)} tone="oliva" />}
               <Line label={`Frete · ${o.shippingLabel}`} value={o.shippingCents ? formatBRL(o.shippingCents) : "Grátis"} />
-              {o.pixDiscountCents > 0 && <Line label="Pix 5%" value={formatBRL(-o.pixDiscountCents)} tone="oliva" />}
+              {o.pixDiscountCents > 0 && <Line label="Desconto no Pix" value={formatBRL(-o.pixDiscountCents)} tone="oliva" />}
               <div className="flex justify-between border-t border-linha pt-2 text-[18px]">
                 <dt>Total</dt>
                 <dd className="tabular-nums">{formatBRL(o.totalCents)}</dd>

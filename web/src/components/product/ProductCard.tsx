@@ -2,7 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useId, useRef, useState } from "react";
-import { SENSATION_LABEL, formatBRL, installmentLabel, type ProductCardDTO, type SizeOptionDTO } from "@movalev/shared";
+import { SENSATION_LABEL, formatBRL, type ProductCardDTO, type SizeOptionDTO } from "@movalev/shared";
 import { Media } from "@/components/ui/Media";
 import { Price } from "./Price";
 import { SwatchDot } from "@/components/ui/Swatch";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/Badge";
 import { CloseIcon, FavoriteHeart, PlusIcon } from "@/components/ui/icons";
 import { useCart, type CartLine } from "@/lib/cart";
 import { useFavorites } from "@/lib/favorites";
+import { installmentText, useStoreConfig } from "@/lib/storeConfig";
 import { cn } from "@/lib/cn";
 
 export function cardToCartLine(p: ProductCardDTO, s: SizeOptionDTO): Omit<CartLine, "quantity"> {
@@ -38,6 +39,7 @@ const CARD_SIZES = "(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw";
 export function ProductCard({ product, variant = "home", priority = false }: { product: ProductCardDTO; variant?: Variant; priority?: boolean }) {
   const href = productHref(product);
   const fav = useFavorites();
+  const installments = installmentText(useStoreConfig(), product.priceCents);
   const isFav = fav.has(product.id);
 
   return (
@@ -104,7 +106,7 @@ export function ProductCard({ product, variant = "home", priority = false }: { p
         </h3>
         <p className="shrink-0 text-[16px] font-normal"><Price cents={product.priceCents} compareAt={product.compareAtPriceCents} compareClassName="text-[14px]" /></p>
       </div>
-      {variant === "home" && <p className="mt-1 text-[14px] font-light text-texto-2">ou {installmentLabel(product.priceCents)}</p>}
+      {variant === "home" && installments && <p className="mt-1 text-[14px] font-light text-texto-2">ou {installments}</p>}
     </article>
   );
 }

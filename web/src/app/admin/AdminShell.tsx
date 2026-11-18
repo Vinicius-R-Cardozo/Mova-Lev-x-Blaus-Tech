@@ -22,9 +22,12 @@ export const ADMIN_NAV: { href: string; label: string; admin?: boolean; group: s
   { href: "/admin/categorias", label: "Categorias", group: "Catálogo" },
   { href: "/admin/colecoes", label: "Coleções", group: "Catálogo" },
   { href: "/admin/conteudo", label: "Home", group: "Conteúdo" },
-  { href: "/admin/regras", label: "Desconto e frete", admin: true, group: "Loja" },
-  { href: "/admin/newsletter", label: "Newsletter", admin: true, group: "Loja" },
-  { href: "/admin/atividades", label: "Atividades", admin: true, group: "Loja" },
+  { href: "/admin/configuracoes/loja", label: "Dados da loja", admin: true, group: "Configurações" },
+  { href: "/admin/configuracoes/pagamentos", label: "Pagamentos", admin: true, group: "Configurações" },
+  { href: "/admin/regras", label: "Frete e desconto", admin: true, group: "Configurações" },
+  { href: "/admin/configuracoes/usuarios", label: "Usuários", admin: true, group: "Configurações" },
+  { href: "/admin/atividades", label: "Atividades", admin: true, group: "Configurações" },
+  { href: "/admin/newsletter", label: "Newsletter", admin: true, group: "Configurações" },
 ];
 
 const PUBLIC = ["/admin/login", "/admin/redefinir-senha"];

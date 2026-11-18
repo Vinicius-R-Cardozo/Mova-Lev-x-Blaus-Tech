@@ -3,6 +3,8 @@ import { preload } from "react-dom";
 import { cormorant, jost } from "./fonts";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import { Providers } from "@/components/Providers";
+import { api } from "@/lib/api";
+import { DEFAULT_PAYMENT_SETTINGS, DEFAULT_STORE_SETTINGS } from "@movalev/shared";
 import { JsonLd } from "@/components/ui/JsonLd";
 import "./globals.css";
 
@@ -22,7 +24,9 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Configurações da loja (painel): dados da empresa e formas de pagamento. Sem API, padrões.
+  const storeConfig = await api.store().catch(() => ({ store: DEFAULT_STORE_SETTINGS, payments: DEFAULT_PAYMENT_SETTINGS }));
   // Máscaras CSS são buscadas em modo CORS: o preload precisa do mesmo modo para ser aproveitado.
   preload("/brand/wordmark.svg", { as: "image", fetchPriority: "high", crossOrigin: "anonymous" });
   return (
@@ -56,7 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             ],
           }}
         />
-        <Providers>{children}</Providers>
+        <Providers storeConfig={storeConfig}>{children}</Providers>
       </body>
     </html>
   );

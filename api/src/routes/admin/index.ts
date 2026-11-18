@@ -8,6 +8,8 @@ import { adminStockRoutes } from "./stock";
 import { adminGroupingRoutes } from "./groupings";
 import { adminCustomerRoutes } from "./customers";
 import { adminDashboardRoutes } from "./dashboard";
+import { adminSettingsRoutes } from "./settings";
+import { adminUserRoutes } from "./users";
 
 declare module "fastify" {
   interface FastifyContextConfig {
@@ -44,4 +46,6 @@ export async function adminRoutes(app: FastifyInstance) {
   await app.register(adminOperationsRoutes);
   await app.register(adminCustomerRoutes);
   await app.register(adminDashboardRoutes);
+  await app.register(adminSettingsRoutes);
+  await app.register(adminUserRoutes);
 }

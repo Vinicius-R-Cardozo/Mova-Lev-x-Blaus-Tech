@@ -2,8 +2,11 @@
  * Dinheiro sempre em CENTAVOS (inteiro). Nada de float para valor monetário.
  */
 
+/** Padrões das formas de pagamento (o painel pode mudar — ver PaymentSettings em content.ts). */
 export const MAX_INSTALLMENTS = 6;
 export const PIX_DISCOUNT_PERCENT = 5;
+/** Parcela mínima padrão (abaixo disso, menos parcelas). */
+export const MIN_INSTALLMENT_CENTS = 0;
 
 /** Arredonda meio-para-cima (valores positivos), ex.: 70817,75 → 70818. */
 export function roundCents(value: number): number {
@@ -44,7 +47,13 @@ export function installmentLabel(totalCents: number, installments = MAX_INSTALLM
   return `${installments}x de ${formatBRL(installmentCents(totalCents, installments))} sem juros`;
 }
 
-/** Total no Pix com 5% off. */
-export function pixTotalCents(totalCents: number): number {
-  return totalCents - percentOf(totalCents, PIX_DISCOUNT_PERCENT);
+/** Total no Pix com o desconto do Pix (padrão 5%). */
+export function pixTotalCents(totalCents: number, percent = PIX_DISCOUNT_PERCENT): number {
+  return totalCents - percentOf(totalCents, percent);
+}
+
+/** Quantas parcelas cabem: até `max`, sem parcela menor que `minCents`; no mínimo 1. */
+export function installmentsFor(totalCents: number, max = MAX_INSTALLMENTS, minCents = MIN_INSTALLMENT_CENTS): number {
+  if (minCents <= 0) return Math.max(1, max);
+  return Math.max(1, Math.min(max, Math.floor(totalCents / minCents)));
 }

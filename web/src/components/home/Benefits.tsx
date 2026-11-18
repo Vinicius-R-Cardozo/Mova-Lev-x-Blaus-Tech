@@ -1,13 +1,16 @@
+import { api } from "@/lib/api";
 import { CardIcon, ExchangeIcon, ShieldIcon, TruckIcon } from "@/components/ui/icons";
 
-const items = [
-  { Icon: TruckIcon, title: "Frete grátis", text: "acima de R$ 299" },
-  { Icon: ExchangeIcon, title: "Troca grátis", text: "em até 30 dias" },
-  { Icon: CardIcon, title: "6x sem juros", text: "ou 5% off no Pix" },
-  { Icon: ShieldIcon, title: "Compra segura", text: "dados protegidos" },
-];
-
-export function Benefits() {
+export async function Benefits() {
+  const pay = (await api.store().catch(() => null))?.payments;
+  const card = pay?.cardEnabled === false ? null : `${pay?.maxInstallments ?? 6}x sem juros`;
+  const pix = pay?.pixEnabled === false || pay?.pixDiscountPercent === 0 ? null : `${pay?.pixDiscountPercent ?? 5}% off no Pix`;
+  const items = [
+    { Icon: TruckIcon, title: "Frete grátis", text: "acima de R$ 299" },
+    { Icon: ExchangeIcon, title: "Troca grátis", text: "em até 30 dias" },
+    { Icon: CardIcon, title: card ?? pix ?? "Pix, cartão e boleto", text: card && pix ? `ou ${pix}` : "formas de pagamento" },
+    { Icon: ShieldIcon, title: "Compra segura", text: "dados protegidos" },
+  ];
   return (
     <section aria-label="Vantagens" className="mt-20 border-y border-linha md:mt-[100px]">
       <ul className="container-site grid grid-cols-2 gap-y-6 py-7 md:grid-cols-4">

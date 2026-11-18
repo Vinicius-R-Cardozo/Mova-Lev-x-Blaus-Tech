@@ -50,3 +50,61 @@ export const shippingSettingsSchema = z.object({
   pickup: z.object({ enabled: z.boolean(), label: z.string(), address: z.string(), days: z.number().int().min(0) }),
 });
 export type ShippingSettings = z.infer<typeof shippingSettingsSchema>;
+
+// ───────────────────────────── Configurações da loja ─────────────────────────────
+
+const optText = (max: number) => z.string().trim().max(max).default("");
+
+/** Dados da empresa e canais (páginas legais, rodapé, contato, e-mails). */
+export const storeSettingsSchema = z.object({
+  storeName: z.string().trim().min(2).max(60).default("MOVA LEV"),
+  legalName: optText(120),
+  cnpj: z
+    .string()
+    .trim()
+    .regex(/^$|^\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}$/, "CNPJ inválido")
+    .default(""),
+  address: optText(200),
+  contactEmail: z.string().trim().email("E-mail inválido").or(z.literal("")).default(""),
+  dpoEmail: z.string().trim().email("E-mail inválido").or(z.literal("")).default(""),
+  whatsapp: z
+    .string()
+    .trim()
+    .regex(/^$|^\+?\d{10,13}$/, "Só números, com DDD (ex.: 11987654321)")
+    .default(""),
+  hours: optText(120).default("segunda a sexta, das 9h às 18h"),
+  instagram: z.string().trim().url("URL inválida").or(z.literal("")).default("https://instagram.com/movalev"),
+  tiktok: z.string().trim().url("URL inválida").or(z.literal("")).default(""),
+  pinterest: z.string().trim().url("URL inválida").or(z.literal("")).default(""),
+  youtube: z.string().trim().url("URL inválida").or(z.literal("")).default(""),
+});
+export type StoreSettings = z.infer<typeof storeSettingsSchema>;
+
+/** Formas de pagamento oferecidas no checkout. */
+export const paymentSettingsSchema = z
+  .object({
+    pixEnabled: z.boolean().default(true),
+    pixDiscountPercent: z.number().int().min(0, "Mínimo 0%").max(30, "Máximo 30%").default(5),
+    cardEnabled: z.boolean().default(true),
+    maxInstallments: z.number().int().min(1).max(12, "Até 12x").default(6),
+    /** Parcela mínima em centavos (0 = sem mínimo). */
+    minInstallmentCents: z.number().int().min(0).max(100_000).default(0),
+    boletoEnabled: z.boolean().default(true),
+  })
+  .refine((p) => p.pixEnabled || p.cardEnabled || p.boletoEnabled, { message: "Deixe ao menos uma forma de pagamento ativa", path: ["pixEnabled"] });
+export type PaymentSettings = z.infer<typeof paymentSettingsSchema>;
+export const DEFAULT_PAYMENT_SETTINGS: PaymentSettings = paymentSettingsSchema.parse({});
+export const DEFAULT_STORE_SETTINGS: StoreSettings = storeSettingsSchema.parse({});
+
+/** O que a vitrine precisa saber da loja (público). */
+export interface StoreConfigDTO {
+  store: StoreSettings;
+  payments: PaymentSettings;
+}
+
+/** Parâmetros que o cálculo de preço usa (desligado = sem parcelamento / sem desconto). */
+export const pricingPaymentsOf = (p: PaymentSettings) => ({
+  maxInstallments: p.cardEnabled ? p.maxInstallments : 1,
+  minInstallmentCents: p.minInstallmentCents,
+  pixDiscountPercent: p.pixEnabled ? p.pixDiscountPercent : 0,
+});

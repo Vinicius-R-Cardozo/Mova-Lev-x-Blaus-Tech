@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import { storeSettings } from "../lib/settings";
 import { CONTACT_SUBJECT_LABEL, contactInputSchema } from "@movalev/shared";
 import { prisma } from "../lib/prisma";
 import { withIdempotency } from "../lib/idempotency";
@@ -13,7 +14,8 @@ export async function contactRoutes(app: FastifyInstance) {
       const saved = await prisma.contactMessage.create({
         data: { name: input.name, email: input.email, subject: input.subject, orderNumber: input.orderNumber?.replace("#", "") ?? null, message: input.message },
       });
-      const to = process.env.STORE_EMAIL;
+      // E-mail de atendimento do painel (Configurações › Loja); senão, a variável de ambiente.
+      const to = (await storeSettings()).contactEmail || process.env.STORE_EMAIL;
       if (to) {
         const subject = `[Contato] ${CONTACT_SUBJECT_LABEL[input.subject]}${input.orderNumber ? ` · pedido ${input.orderNumber}` : ""} — ${input.name}`;
         await emailProvider

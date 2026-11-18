@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { InfoPage } from "@/components/institutional/InfoPage";
-import { COMPANY } from "@/lib/company";
+import { getCompany } from "@/lib/company";
+import { api } from "@/lib/api";
 
 export const metadata: Metadata = {
   title: "Termos de uso",
@@ -9,7 +10,13 @@ export const metadata: Metadata = {
   alternates: { canonical: "/termos-de-uso" },
 };
 
-export default function TermosPage() {
+export default async function TermosPage() {
+  const [COMPANY, cfg] = await Promise.all([getCompany(), api.store().catch(() => null)]);
+  const pay = cfg?.payments;
+  const payTerms = [
+    pay?.pixEnabled !== false && (pay?.pixDiscountPercent ?? 5) > 0 ? `Pagamento no Pix tem ${pay?.pixDiscountPercent ?? 5}% de desconto sobre o total.` : null,
+    pay?.cardEnabled !== false && (pay?.maxInstallments ?? 6) > 1 ? `Cartão em até ${pay?.maxInstallments ?? 6}x sem juros.` : null,
+  ].filter(Boolean).join(" ") || "Formas de pagamento conforme exibidas no checkout.";
   return (
     <InfoPage
       slug="termos-de-uso"
@@ -38,7 +45,7 @@ export default function TermosPage() {
       <ul>
         <li>Os preços estão em reais e podem mudar sem aviso; vale o preço exibido no momento da confirmação do pedido.</li>
         <li>O desconto progressivo é aplicado automaticamente pela quantidade de peças. Cupons seguem as regras informadas em cada um e podem não acumular com outras promoções.</li>
-        <li>Pagamento no Pix tem 5% de desconto sobre o total. Cartão em até 6x sem juros.</li>
+        <li>{payTerms}</li>
         <li>Erros evidentes de preço ou estoque podem levar ao cancelamento do pedido, com reembolso integral.</li>
       </ul>
       <h2 id="pedido">Pedido e pagamento</h2>

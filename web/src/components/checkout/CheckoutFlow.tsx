@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useStoreConfig } from "@/lib/storeConfig";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
@@ -81,7 +82,10 @@ export function CheckoutFlow() {
   const [newsletter, setNewsletter] = useState(false);
   const [address, setAddress] = useState({ cep: "", street: "", number: "", complement: "", district: "", city: "", uf: "" });
   const [shippingMethod, setShippingMethod] = useState<ShippingId | null>(null);
-  const [payment, setPayment] = useState<{ method: PayId; installments: number }>({ method: "PIX", installments: 6 });
+  const { payments: payCfg } = useStoreConfig();
+  // Começa na 1ª forma de pagamento ativa no painel.
+  const firstMethod: PayId = payCfg.pixEnabled ? "PIX" : payCfg.cardEnabled ? "CARTAO" : "BOLETO";
+  const [payment, setPayment] = useState<{ method: PayId; installments: number }>({ method: firstMethod, installments: 1 });
   const [coupon, setCoupon] = useState("");
   const [errors, setErrors] = useState<Errors>({});
   const [quote, setQuote] = useState<CheckoutQuoteDTO | null>(null);
@@ -212,7 +216,7 @@ export function CheckoutFlow() {
         method: shippingMethod!,
         address: shippingMethod === "RETIRADA" ? undefined : addressSchema.parse(address),
       },
-      payment: { method: payment.method, installments: payment.method === "CARTAO" ? payment.installments : 1 },
+      payment: { method: payment.method, installments: payment.method === "CARTAO" ? Math.min(payment.installments, pricing.installments.count) : 1 },
       acceptsNewsletter: newsletter || undefined,
     };
     setSubmitting(true);
@@ -473,7 +477,11 @@ export function CheckoutFlow() {
                 Ir para o pagamento
               </button>
               <ul className="mt-6 flex flex-wrap gap-2.5" aria-label="Formas de pagamento aceitas">
-                {["Pix · 5% off", "Cartão em até 6x", "Boleto"].map((c) => (
+                {[
+                  payCfg.pixEnabled && (payCfg.pixDiscountPercent > 0 ? `Pix · ${payCfg.pixDiscountPercent}% off` : "Pix"),
+                  payCfg.cardEnabled && (payCfg.maxInstallments > 1 ? `Cartão em até ${payCfg.maxInstallments}x` : "Cartão"),
+                  payCfg.boletoEnabled && "Boleto",
+                ].filter((c): c is string => !!c).map((c) => (
                   <li key={c} className="border border-linha-forte px-3 py-1.5 text-[13px] font-light">
                     {c}
                   </li>
@@ -488,10 +496,13 @@ export function CheckoutFlow() {
                 Pagamento
               </h1>
               <div className="mt-6 space-y-3" role="radiogroup" aria-label="Forma de pagamento">
-                <PayCard id="PIX" selected={payment.method} onSelect={(m) => setPayment({ ...payment, method: m })} title="Pix" note={`5% off · ${formatBRL(pricing.pixTotalCents)}`}>
+                {payCfg.pixEnabled && (
+                <PayCard id="PIX" selected={payment.method} onSelect={(m) => setPayment({ ...payment, method: m })} title="Pix" note={payCfg.pixDiscountPercent > 0 ? `${payCfg.pixDiscountPercent}% off · ${formatBRL(pricing.pixTotalCents)}` : formatBRL(pricing.pixTotalCents)}>
                   Aprovação na hora. O código vale por 60 minutos.
                 </PayCard>
-                <PayCard id="CARTAO" selected={payment.method} onSelect={(m) => setPayment({ ...payment, method: m })} title="Cartão de crédito" note="em até 6x sem juros">
+                )}
+                {payCfg.cardEnabled && (
+                <PayCard id="CARTAO" selected={payment.method} onSelect={(m) => setPayment({ ...payment, method: m })} title="Cartão de crédito" note={pricing.installments.count > 1 ? `em até ${pricing.installments.count}x sem juros` : "à vista"}>
                   {payment.method === "CARTAO" ? (
                     <span className="mt-3 block">
                       <select
@@ -501,7 +512,7 @@ export function CheckoutFlow() {
                         onChange={(e) => setPayment({ ...payment, installments: Number(e.target.value) })}
                         className="h-12 w-full max-w-xs border border-linha-forte bg-white px-3 text-[15px] focus:border-preto focus:outline-none"
                       >
-                        {[1, 2, 3, 4, 5, 6].map((n) => (
+                        {Array.from({ length: pricing.installments.count }, (_, i) => i + 1).map((n) => (
                           <option key={n} value={n}>
                             {n}x de {formatBRL(installmentCents(pricing.totalCents, n))} sem juros
                           </option>
@@ -512,9 +523,12 @@ export function CheckoutFlow() {
                     "Visa, Mastercard, Elo e American Express."
                   )}
                 </PayCard>
+                )}
+                {payCfg.boletoEnabled && (
                 <PayCard id="BOLETO" selected={payment.method} onSelect={(m) => setPayment({ ...payment, method: m })} title="Boleto" note={formatBRL(pricing.totalCents)}>
                   Vence em 3 dias úteis. As peças ficam reservadas até a compensação.
                 </PayCard>
+                )}
               </div>
               <p className="mt-5 bg-salvia px-4 py-3 text-[14px] font-light text-texto-3">
                 Ambiente de demonstração: nenhuma cobrança é feita agora. O pedido é criado como “Aguardando pagamento”.

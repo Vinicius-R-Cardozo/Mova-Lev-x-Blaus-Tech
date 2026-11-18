@@ -3,6 +3,7 @@ import { computePricing, type OrderDTO, type OrderInput } from "@movalev/shared"
 import { env } from "../env";
 import { prisma } from "./prisma";
 import { recordMovement } from "./stock";
+import { paymentSettings, pricingPayments } from "./settings";
 import { buildLines, checkCoupon, loadShippingSettings, loadTiers } from "./cart";
 import { lookupCep } from "./viacep";
 import { shippingProvider } from "../providers/shipping";
@@ -56,8 +57,12 @@ export async function createOrder(input: OrderInput, ctx: { idempotencyKey: stri
     if (!coupon.ok) throw new CheckoutError(422, "cupom_invalido", coupon.message);
   }
 
-  const [tiers, settings] = await Promise.all([loadTiers(), loadShippingSettings()]);
+  const [tiers, settings, payments] = await Promise.all([loadTiers(), loadShippingSettings(), paymentSettings()]);
+  // Forma de pagamento desligada no painel ou parcelas acima do permitido: recusa.
+  const enabled = { PIX: payments.pixEnabled, CARTAO: payments.cardEnabled, BOLETO: payments.boletoEnabled }[input.payment.method];
+  if (!enabled) throw new CheckoutError(422, "pagamento_indisponivel", "Esta forma de pagamento não está disponível no momento.");
   const pricing = computePricing({
+    payments: pricingPayments(payments),
     items: lines.map((l) => ({ unitPriceCents: l.unitPriceCents, quantity: l.quantity })),
     tiers,
     coupon: coupon?.ok ? coupon.coupon : null,
@@ -71,6 +76,7 @@ export async function createOrder(input: OrderInput, ctx: { idempotencyKey: stri
   const pixDiscountCents = isPix ? pricing.totalCents - pricing.pixTotalCents : 0;
   const totalCents = pricing.totalCents - pixDiscountCents;
   const installments = input.payment.method === "CARTAO" ? input.payment.installments : 1;
+  if (installments > pricing.installments.count) throw new CheckoutError(422, "parcelas", `Em até ${pricing.installments.count}x para este valor.`);
   const expiresAt = new Date(Date.now() + RESERVATION_MINUTES[input.payment.method] * 60_000);
 
   let order: Order;
@@ -188,6 +194,7 @@ export async function sendConfirmationEmail(orderId: string, opts: { force?: boo
     shippingCents: order.shippingCents,
     totalCents: order.totalCents + order.pixDiscountCents,
     paymentMethod: order.paymentMethod,
+    installments: order.installments,
     payableCents: order.totalCents,
     orderUrl: `${env.SITE_URL}/checkout/confirmacao/${order.id}?t=${order.accessToken}`,
   });

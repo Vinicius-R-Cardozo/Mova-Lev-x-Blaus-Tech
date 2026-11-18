@@ -1,7 +1,7 @@
 import { revalidateTag } from "next/cache";
 import { timingSafeEqual } from "node:crypto";
 
-const ALLOWED = new Set(["home", "catalog", "categories"]);
+const ALLOWED = new Set(["home", "catalog", "categories", "store", "pages"]);
 
 /** Chamado pela API após mudanças no admin: recarrega o cache das páginas da loja. */
 export async function POST(req: Request) {

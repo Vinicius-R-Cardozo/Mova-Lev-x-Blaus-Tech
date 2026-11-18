@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { checkoutQuoteInputSchema, computePricing, orderInputSchema, type CheckoutQuoteDTO, type OrderCreatedDTO, type ShippingOptionDTO } from "@movalev/shared";
 import { prisma } from "../lib/prisma";
+import { paymentSettings, pricingPayments } from "../lib/settings";
 import { optionalAuth } from "../plugins/auth";
 import { withIdempotency } from "../lib/idempotency";
 import { buildLines, checkCoupon, loadShippingSettings, loadTiers, purchasable, suggestionFor } from "../lib/cart";
@@ -26,7 +27,8 @@ export async function checkoutRoutes(app: FastifyInstance) {
     if (input.couponCode) couponCheck = await checkCoupon(input.couponCode, { email: input.email ?? req.user?.email, profileId: req.user?.id });
     const coupon = couponCheck?.ok ? couponCheck.coupon : null;
 
-    const base = computePricing({ items, tiers, coupon, freeShippingThresholdCents: settings.freeShippingThresholdCents });
+    const payments = pricingPayments(await paymentSettings());
+    const base = computePricing({ items, tiers, coupon, freeShippingThresholdCents: settings.freeShippingThresholdCents, payments });
     const raw = address ? await shippingProvider.cotar({ cep: input.cep!, uf: address.uf, pieces: base.pieces, merchandiseCents: base.merchandiseCents }) : [];
     const shippingOptions: ShippingOptionDTO[] = raw.map((o) => ({
       id: o.id,
@@ -40,6 +42,7 @@ export async function checkoutRoutes(app: FastifyInstance) {
     const rawSelected = raw.find((o) => o.id === selected?.id);
 
     const pricing = computePricing({
+      payments,
       items,
       tiers,
       coupon,

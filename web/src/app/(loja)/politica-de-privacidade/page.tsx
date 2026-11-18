@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { InfoPage } from "@/components/institutional/InfoPage";
 import { CookiePreferencesLink } from "@/components/consent/CookiePreferencesLink";
-import { COMPANY } from "@/lib/company";
+import { getCompany } from "@/lib/company";
 
 export const metadata: Metadata = {
   title: "Política de privacidade",
@@ -10,7 +10,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/politica-de-privacidade" },
 };
 
-export default function PrivacidadePage() {
+export default async function PrivacidadePage() {
+  const COMPANY = await getCompany();
   return (
     <InfoPage
       slug="politica-de-privacidade"

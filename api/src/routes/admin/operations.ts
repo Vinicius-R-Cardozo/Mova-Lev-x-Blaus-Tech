@@ -274,6 +274,29 @@ export async function adminOperationsRoutes(app: FastifyInstance) {
     return c;
   });
 
+  /** Quem usou o cupom (pedido, e-mail, data). */
+  app.get<{ Params: { id: string } }>("/admin/coupons/:id/redemptions", async (req) => {
+    const couponId = id.parse(req.params.id);
+    const rows = await prisma.couponRedemption.findMany({
+      where: { couponId },
+      orderBy: { createdAt: "desc" },
+      take: 200,
+      include: { order: { select: { id: true, number: true, status: true, totalCents: true, couponDiscountCents: true } } },
+    });
+    return rows.map((r) => ({ id: r.id, email: r.email, createdAt: r.createdAt, order: r.order }));
+  });
+
+  /** Excluir só cupom nunca usado; usado, desative (o histórico dos pedidos depende dele). */
+  app.delete<{ Params: { id: string } }>("/admin/coupons/:id", async (req, reply) => {
+    const couponId = id.parse(req.params.id);
+    const c = await prisma.coupon.findUnique({ where: { id: couponId }, include: { _count: { select: { redemptions: true } } } });
+    if (!c) return reply.code(204).send();
+    if (c._count.redemptions > 0) return reply.code(409).send({ error: "cupom_usado", message: `O cupom ${c.code} já foi usado ${c._count.redemptions} vez(es). Desative em vez de excluir.` });
+    await prisma.coupon.delete({ where: { id: couponId } });
+    await audit(req, { action: "coupon.delete", entity: "cupom", entityId: couponId, summary: `Excluiu o cupom ${c.code}`, before: { code: c.code, type: c.type, value: c.value } });
+    return reply.code(204).send();
+  });
+
   // ── Regras: desconto progressivo e frete ──
   app.get("/admin/settings/progressive", async () => ({ tiers: await prisma.progressiveTier.findMany({ orderBy: { minItems: "asc" } }) }));
 

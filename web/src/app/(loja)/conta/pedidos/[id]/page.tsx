@@ -65,7 +65,7 @@ export default function PedidoPage() {
         {o.progressiveDiscountCents > 0 && <div className="flex justify-between text-oliva"><dt>Desconto progressivo ({o.progressivePercent}%)</dt><dd>{formatBRL(-o.progressiveDiscountCents)}</dd></div>}
         {o.couponDiscountCents > 0 && <div className="flex justify-between text-oliva"><dt>Cupom {o.couponCode}</dt><dd>{formatBRL(-o.couponDiscountCents)}</dd></div>}
         <div className="flex justify-between"><dt>Frete · {o.shippingLabel}</dt><dd>{o.shippingCents ? formatBRL(o.shippingCents) : "Grátis"}</dd></div>
-        {o.pixDiscountCents > 0 && <div className="flex justify-between text-oliva"><dt>Pix 5% off</dt><dd>{formatBRL(-o.pixDiscountCents)}</dd></div>}
+        {o.pixDiscountCents > 0 && <div className="flex justify-between text-oliva"><dt>Desconto no Pix</dt><dd>{formatBRL(-o.pixDiscountCents)}</dd></div>}
         <div className="flex justify-between border-t border-linha pt-2 text-[20px]"><dt>Total</dt><dd>{formatBRL(o.totalCents)}</dd></div>
       </dl>
     </article>

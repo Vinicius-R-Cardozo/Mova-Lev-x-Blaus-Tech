@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import { paymentSettings, pricingPayments } from "../lib/settings";
 import { cartQuoteInputSchema, cartReplaceSchema, computePricing, type CartQuoteDTO } from "@movalev/shared";
 import { prisma } from "../lib/prisma";
 import { optionalAuth, requireAuth } from "../plugins/auth";
@@ -30,12 +31,13 @@ export async function cartRoutes(app: FastifyInstance) {
   app.post("/cart/quote", { config: { rateLimit: { max: 120, timeWindow: "1 minute" } } }, async (req): Promise<CartQuoteDTO> => {
     await optionalAuth(req);
     const input = cartQuoteInputSchema.parse(req.body);
-    const [{ lines, removed }, tiers, shipping] = await Promise.all([buildLines(input.items), loadTiers(), loadShippingSettings()]);
+    const [{ lines, removed }, tiers, shipping, payments] = await Promise.all([buildLines(input.items), loadTiers(), loadShippingSettings(), paymentSettings()]);
 
     let couponResult: Awaited<ReturnType<typeof checkCoupon>> | null = null;
     if (input.couponCode) couponResult = await checkCoupon(input.couponCode, { email: req.user?.email, profileId: req.user?.id });
 
     const pricing = computePricing({
+      payments: pricingPayments(payments),
       items: purchasable(lines),
       tiers,
       coupon: couponResult?.ok ? couponResult.coupon : null,

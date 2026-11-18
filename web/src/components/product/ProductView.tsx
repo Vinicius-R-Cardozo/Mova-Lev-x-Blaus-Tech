@@ -5,7 +5,6 @@ import { useId, useRef, useState, type CSSProperties } from "react";
 import {
   SENSATION_LABEL,
   formatBRL,
-  installmentLabel,
   type ProductCardDTO,
   type ProductColorDetailDTO,
   type ProductDetailDTO,
@@ -19,6 +18,7 @@ import { FavoriteHeart, MinusIcon, PlusIcon } from "@/components/ui/icons";
 import { defaultSize } from "@/components/home/lookToCart";
 import { useCart } from "@/lib/cart";
 import { useFavorites } from "@/lib/favorites";
+import { installmentText, pixText, useStoreConfig } from "@/lib/storeConfig";
 import { cn } from "@/lib/cn";
 
 /** Posição na cascata de entrada (multiplica --motion-stagger). */
@@ -39,6 +39,8 @@ export function ProductView({ product, initialColor }: { product: ProductDetailD
 
   const color: ProductColorDetailDTO = product.colors.find((c) => c.slug === colorSlug) ?? product.colors[0]!;
   const price = size?.priceCents ?? product.priceCents;
+  const storeConfig = useStoreConfig();
+  const priceHints = [installmentText(storeConfig, price), pixText(storeConfig)].filter(Boolean).join(" · ");
   const isFav = fav.has(product.id);
   const soldOut = color.sizes.every((s) => !s.available);
   const nameMain = product.nameEmphasis && product.name.endsWith(product.nameEmphasis) ? product.name.slice(0, -product.nameEmphasis.length).trim() : product.name;
@@ -100,7 +102,7 @@ export function ProductView({ product, initialColor }: { product: ProductDetailD
           </h1>
           <p className="enter mt-4 flex flex-wrap items-baseline gap-x-2" style={cascade(2)}>
             <Price key={price} cents={price} compareAt={price === product.priceCents ? product.compareAtPriceCents : null} className={cn("text-[24px] font-normal", touched && "swap-in")} compareClassName="text-[18px]" />
-            <span className="text-body-sm font-light text-texto-2">· {installmentLabel(price)} · 5% off no Pix</span>
+            {priceHints && <span className="text-body-sm font-light text-texto-2">· {priceHints}</span>}
           </p>
           <p className="enter mt-3 text-body-sm font-light text-texto-2" style={cascade(3)}>
             {product.rating ? (
