@@ -61,24 +61,6 @@ function orderWhere(f: z.infer<typeof orderFilterSchema>): Prisma.OrderWhereInpu
 }
 
 export async function adminOperationsRoutes(app: FastifyInstance) {
-  // ── Resumo ──
-  app.get("/admin/summary", async () => {
-    const since = new Date(Date.now() - 30 * 86_400_000);
-    const [byStatus, paid, lowStock, subscribers] = await Promise.all([
-      prisma.order.groupBy({ by: ["status"], _count: { _all: true } }),
-      prisma.order.aggregate({ where: { status: { in: ["PAGO", "EM_SEPARACAO", "ENVIADO", "ENTREGUE"] }, createdAt: { gte: since } }, _sum: { totalCents: true }, _count: { _all: true } }),
-      prisma.variant.count({ where: { stock: { lte: 2 }, product: { status: "ACTIVE" } } }),
-      prisma.newsletterSubscriber.count({ where: { unsubscribedAt: null } }),
-    ]);
-    return {
-      orders: Object.fromEntries(ORDER_STATUSES.map((s) => [s, byStatus.find((b) => b.status === s)?._count._all ?? 0])),
-      revenue30dCents: paid._sum.totalCents ?? 0,
-      paidOrders30d: paid._count._all,
-      lowStockVariants: lowStock,
-      subscribers,
-    };
-  });
-
   // ── Pedidos ──
   app.get("/admin/orders", async (req) => {
     const f = orderFilterSchema.parse(req.query);
