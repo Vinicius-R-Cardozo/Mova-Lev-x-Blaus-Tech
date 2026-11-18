@@ -306,6 +306,61 @@
   animation: bump var(--motion-slow) var(--ease-out);
 }
 
+/* Header: itens da pílula central e painel "Loja". */
+.nav-pill {
+  display: inline-flex;
+  height: 2.75rem;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 0 1.25rem;
+  font-size: 15px;
+  font-weight: 400;
+  color: #1a1a1a;
+  transition:
+    background-color var(--motion-base) var(--ease-out),
+    color var(--motion-base) var(--ease-out),
+    transform var(--motion-fast) var(--ease-out);
+}
+.nav-pill:hover {
+  background-color: #ece6dd;
+}
+.nav-pill:active {
+  transform: scale(0.97);
+}
+.nav-pill-active,
+.nav-pill-active:hover {
+  background-color: #4d5a3a;
+  color: #f5f2ee;
+}
+.store-panel {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  z-index: 10;
+  padding-top: 0.75rem; /* ponte invisível: o mouse passa do botão ao painel sem fechar */
+  opacity: 0;
+  visibility: hidden;
+  transform: translate3d(-50%, -8px, 0);
+  transition:
+    opacity var(--motion-base) var(--ease-out),
+    transform var(--motion-base) var(--ease-out),
+    visibility 0s linear var(--motion-base);
+}
+.store-panel[data-open="true"] {
+  opacity: 1;
+  visibility: visible;
+  transform: translate3d(-50%, 0, 0);
+  transition-delay: 0s;
+}
+@keyframes bump-soft {
+  40% {
+    transform: scale(1.08);
+  }
+}
+.bump-soft {
+  animation: bump-soft var(--motion-slow) var(--ease-out);
+}
+
 /* Abas: o sublinhado cresce da esquerda (substitui o text-decoration). */
 .tab-line {
   position: relative;
@@ -365,6 +420,7 @@
     transform: none;
   }
   .heart[data-on="true"],
+  .bump-soft,
   .hero-settle,
   .page-enter {
     animation: none;

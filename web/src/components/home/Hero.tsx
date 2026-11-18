@@ -41,7 +41,7 @@ export function Hero({ hero, campaign }: { hero: HomeDTO["hero"]; campaign: Home
   };
 
   return (
-    <section aria-labelledby="hero-titulo" className="relative h-hero-m overflow-hidden text-offwhite on-dark md:h-hero">
+    <section aria-labelledby="hero-titulo" className="relative h-[clamp(520px,calc(100svh-102px),700px)] overflow-hidden text-offwhite on-dark md:h-[clamp(600px,calc(100svh-122px),920px)]">
       {hero.videoUrl ? (
         <video
           className="hero-settle absolute inset-0 h-full w-full object-cover"
@@ -58,9 +58,12 @@ export function Hero({ hero, campaign }: { hero: HomeDTO["hero"]; campaign: Home
       ) : (
         <HeroArt />
       )}
-      {/* Véu no topo: menu claro legível sobre foto/vídeo claros. */}
-      {(hero.videoUrl || hero.posterUrl) && <div aria-hidden className="absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-black/40 to-transparent" />}
-      <div aria-hidden className="absolute inset-x-0 bottom-0 h-[78%] bg-gradient-to-t from-black/60 via-black/25 to-transparent" />
+      {/*
+        Véus para o texto claro passar no contraste AA sobre qualquer foto/vídeo
+        (medido: título ≥ 6:1 e textos pequenos ≥ 5:1 nos pontos mais claros).
+      */}
+      <div aria-hidden className="absolute inset-x-0 bottom-0 h-[78%] bg-gradient-to-t from-preto/80 via-preto/50 to-transparent" />
+      <div aria-hidden className="absolute inset-0 hidden bg-gradient-to-r from-preto/45 via-preto/15 to-transparent md:block" />
       {!hero.videoUrl && !hero.posterUrl && <p className="enter label-sm absolute right-gutter top-[124px] hidden text-preto/80 md:block" style={cascade(5)}>{hero.caption}</p>}
 
       <div className="container-site relative flex h-full flex-col justify-end pb-8 md:pb-[68px]">
