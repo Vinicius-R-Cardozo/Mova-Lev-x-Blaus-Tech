@@ -60,7 +60,7 @@ export function Filters({ colors, priceMinCents, priceMaxCents, className }: { c
                   type="checkbox"
                   checked={sens.includes(value)}
                   onChange={() => update((p) => toggle(p, "sensacao", value))}
-                  className="h-5 w-5 appearance-none rounded-none border border-preto bg-transparent checked:bg-preto checked:shadow-[inset_0_0_0_3px_#F5F2EE] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-oliva"
+                  className="h-5 w-5 appearance-none rounded-none border border-preto bg-transparent checked:bg-preto checked:shadow-[inset_0_0_0_3px_#F6F3EC] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-oliva"
                 />
                 <label htmlFor={id} className="cursor-pointer">
                   <span className="font-display text-[21px]">{SENSATION_LABEL[s]}</span> <span className="text-[14px] font-light text-texto-2">{SENSATION_HINT[s]}</span>
@@ -86,7 +86,7 @@ export function Filters({ colors, priceMinCents, priceMaxCents, className }: { c
                   onClick={() => update((p) => toggle(p, "cor", c.slug))}
                   className={cn(
                     "h-[46px] w-[46px] rounded-full border border-linha-forte transition-shadow",
-                    on && "shadow-[0_0_0_3px_#F5F2EE,0_0_0_4px_#1A1A1A]",
+                    on && "shadow-[0_0_0_3px_#F6F3EC,0_0_0_4px_#1A1A1A]",
                   )}
                   style={{ backgroundColor: c.hex }}
                 />

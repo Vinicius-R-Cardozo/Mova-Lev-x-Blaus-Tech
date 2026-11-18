@@ -342,8 +342,8 @@ const settings = {
   home: {
     hero: {
       kicker: "Coleção Respiro · Outono",
-      titleLine1: "Movimento",
-      titleLine2: "é vida.",
+      titleLine1: "Vista seu movimento.",
+      titleLine2: "Viva seu leve.",
       videoUrl: null,
       posterUrl: null,
       caption: "VÍDEO · CAMPANHA RESPIRO, 8 S EM LOOP",

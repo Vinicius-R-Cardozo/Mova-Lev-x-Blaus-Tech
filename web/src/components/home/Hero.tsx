@@ -15,12 +15,12 @@ const cascade = (i: number) => ({ "--i": i }) as CSSProperties;
 /** Silhueta e linhas da campanha enquanto o vídeo não chega. */
 function HeroArt() {
   return (
-    <div aria-hidden className="hero-settle absolute inset-0" style={{ background: "linear-gradient(180deg,#A99A8A 0%,#CDBBA6 24%,#C3AF99 50%,#8F806F 76%,#4E453C 100%)" }}>
+    <div aria-hidden className="hero-settle absolute inset-0" style={{ background: "linear-gradient(180deg,#A89B8A 0%,#CDBBA6 24%,#C3AF99 50%,#8F806F 76%,#4E453C 100%)" }}>
       <div className="absolute left-[51%] top-[19%] h-[73%] w-[24%] rounded-[50%] bg-[#D2BEA9]/60 md:left-[50.5%]" />
       <div className="absolute left-[58.5%] top-[14%] aspect-square w-[8.6%] rounded-full bg-[#C4A898]/70" />
       <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1440 920" preserveAspectRatio="none" fill="none">
-        <path d="M0 850C420 720 900 560 1440 470" stroke="#F5F2EE" strokeOpacity=".55" strokeWidth="1.2" vectorEffect="non-scaling-stroke" />
-        <path d="M0 900C480 760 960 600 1440 520" stroke="#F5F2EE" strokeOpacity=".3" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+        <path d="M0 850C420 720 900 560 1440 470" stroke="#F6F3EC" strokeOpacity=".55" strokeWidth="1.2" vectorEffect="non-scaling-stroke" />
+        <path d="M0 900C480 760 960 600 1440 520" stroke="#F6F3EC" strokeOpacity=".3" strokeWidth="1" vectorEffect="non-scaling-stroke" />
       </svg>
     </div>
   );
@@ -68,7 +68,8 @@ export function Hero({ hero, campaign }: { hero: HomeDTO["hero"]; campaign: Home
 
       <div className="container-site relative flex h-full flex-col justify-end pb-8 md:pb-[68px]">
         <p className="enter label text-[11px] tracking-[0.32em] md:text-label">{hero.kicker}</p>
-        <h1 id="hero-titulo" className="mt-4 text-hero-m md:mt-8 md:text-hero">
+        {/* No desktop o título deixa livre a faixa do card "Na campanha" (356px) e encolhe um pouco se o texto for longo. */}
+        <h1 id="hero-titulo" className="mt-4 text-hero-m md:mt-8 md:text-hero lg:pr-[396px] lg:text-[clamp(84px,8vw,128px)]">
           {/* Cada linha sobe na sua vez (só transform: o título é o LCP). */}
           <span className="enter-rise inline-block" style={cascade(1)}>{hero.titleLine1}</span> <br className="hidden md:block" />
           <em className="enter-rise inline-block" style={cascade(2)}>{hero.titleLine2}</em>

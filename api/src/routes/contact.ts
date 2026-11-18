@@ -28,7 +28,7 @@ export async function contactRoutes(app: FastifyInstance) {
           })
           .catch((err) => req.log.error({ err }, "falha ao encaminhar contato"));
       }
-      return { status: 201, body: { ok: true, message: "Mensagem recebida! Respondemos em até 1 dia útil." } };
+      return { status: 201, body: { ok: true, message: "Recebemos a sua mensagem, com todo o cuidado. Respondemos em até 1 dia útil." } };
     }),
   );
 }

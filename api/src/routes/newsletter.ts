@@ -18,7 +18,7 @@ export async function newsletterRoutes(app: FastifyInstance) {
         });
         return {
           status: 201,
-          body: { ok: true, message: "Pronto! Seu cupom de 10% chega no seu e-mail." },
+          body: { ok: true, message: "Que bom ter você por aqui. Seu cupom de 10% já está a caminho do seu e-mail." },
         };
       }),
   );

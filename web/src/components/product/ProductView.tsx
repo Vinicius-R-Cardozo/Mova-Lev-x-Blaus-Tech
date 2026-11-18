@@ -130,7 +130,7 @@ export function ProductView({ product, initialColor }: { product: ProductDetailD
                   onClick={() => chooseColor(c.slug)}
                   className={cn(
                     "press h-[46px] w-[46px] rounded-full border border-linha-forte transition-[transform,box-shadow]",
-                    c.slug === color.slug && "shadow-[0_0_0_3px_#F5F2EE,0_0_0_4px_#1A1A1A]",
+                    c.slug === color.slug && "shadow-[0_0_0_3px_#F6F3EC,0_0_0_4px_#1A1A1A]",
                   )}
                   style={{ backgroundColor: c.hex }}
                 />

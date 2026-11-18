@@ -13,7 +13,7 @@ import { InstagramGrid } from "@/components/home/InstagramGrid";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: { absolute: "MOVA LEV · Movimento é vida — moda fitness feminina" },
+  title: { absolute: "MOVA LEV · Vista seu movimento. Viva seu leve." },
   alternates: { canonical: "/" },
 };
 

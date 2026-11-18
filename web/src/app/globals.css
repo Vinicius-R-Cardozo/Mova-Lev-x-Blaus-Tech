@@ -36,20 +36,20 @@
   }
   /* Foco visível e consistente (AA). */
   :focus-visible {
-    outline: 2px solid #4d5a3a;
+    outline: 2px solid #4C5A39;
     outline-offset: 3px;
   }
   .on-dark :focus-visible {
-    outline-color: #f5f2ee;
+    outline-color: #F6F3EC;
   }
   ::selection {
-    background: #e6d5c5;
+    background: #E7D6C6;
     color: #1a1a1a;
   }
 }
 
 @layer components {
-  /* Labels e botões: Jost 11–12px, caixa alta, tracking 0.2em. */
+  /* Labels e botões: Montserrat 11–12px, caixa alta, tracking 0.2em. */
   .label {
     @apply font-sans text-label font-normal uppercase tracking-label;
   }

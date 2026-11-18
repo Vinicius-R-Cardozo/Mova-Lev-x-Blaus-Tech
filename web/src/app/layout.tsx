@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { preload } from "react-dom";
-import { cormorant, jost } from "./fonts";
+import { cormorant, montserrat } from "./fonts";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import { Providers } from "@/components/Providers";
 import { api } from "@/lib/api";
@@ -10,7 +10,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: `${SITE_NAME} · Movimento é vida`, template: `%s · ${SITE_NAME}` },
+  title: { default: `${SITE_NAME} · Vista seu movimento. Viva seu leve.`, template: `%s · ${SITE_NAME}` },
   description: SITE_DESCRIPTION,
   openGraph: { type: "website", locale: "pt_BR", siteName: SITE_NAME, url: SITE_URL },
   twitter: { card: "summary_large_image" },
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#F5F2EE",
+  themeColor: "#F6F3EC",
   width: "device-width",
   initialScale: 1,
 };
@@ -30,7 +30,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // Máscaras CSS são buscadas em modo CORS: o preload precisa do mesmo modo para ser aproveitado.
   preload("/brand/wordmark.svg", { as: "image", fetchPriority: "high", crossOrigin: "anonymous" });
   return (
-    <html lang="pt-BR" className={`${cormorant.variable} ${jost.variable}`} suppressHydrationWarning>
+    <html lang="pt-BR" className={`${cormorant.variable} ${montserrat.variable}`} suppressHydrationWarning>
       <head>
         {/* Esconde o aviso de cookies antes da 1ª pintura se a escolha já foi feita. */}
         <script

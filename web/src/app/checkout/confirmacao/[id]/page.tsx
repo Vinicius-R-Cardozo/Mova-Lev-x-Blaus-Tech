@@ -34,10 +34,10 @@ export default async function ConfirmationPage({ params, searchParams }: Props) 
             Pedido #{o.number} · {ORDER_STATUS_LABEL[o.status]}
           </p>
           <h1 className="mt-4 text-[44px] leading-[1.04] md:text-h2">
-            Pedido criado, <em>{firstName}.</em>
+            Recebemos o seu pedido, <em>{firstName}.</em>
           </h1>
           <p className="mt-4 max-w-lg text-body-lg font-light text-texto-3">
-            Enviamos a confirmação para <strong className="font-normal">{o.email}</strong>. Suas peças estão reservadas até {until}.
+            Ele já está sendo preparado aqui, com todo o cuidado. Enviamos a confirmação para <strong className="font-normal">{o.email}</strong> e as suas peças ficam reservadas até {until}.
           </p>
 
           <section aria-labelledby="pag-titulo" className="mt-10 border border-linha-forte bg-white p-6 md:p-8">

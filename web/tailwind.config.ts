@@ -19,10 +19,10 @@ const config: Config = {
       transparent: "transparent",
       current: "currentColor",
       white: "#FFFFFF",
-      offwhite: "#F5F2EE",
-      areia: "#E6D5C5",
-      taupe: { DEFAULT: "#A99A8A", claro: "#CFC4B7" },
-      oliva: { DEFAULT: "#4D5A3A", escuro: "#3F4A2F" },
+      offwhite: "#F6F3EC",
+      areia: "#E7D6C6",
+      taupe: { DEFAULT: "#A89B8A", claro: "#CFC4B7" },
+      oliva: { DEFAULT: "#4C5A39", escuro: "#3F4A2F" },
       preto: "#1A1A1A",
       bege: "#ECE6DD",
       salvia: "#DDE0D3",
@@ -39,7 +39,7 @@ const config: Config = {
     },
     fontFamily: {
       display: ["var(--font-cormorant)", "Cormorant Garamond", "Georgia", "serif"],
-      sans: ["var(--font-jost)", "Jost", "system-ui", "sans-serif"],
+      sans: ["var(--font-montserrat)", "Montserrat", "system-ui", "sans-serif"],
     },
     extend: {
       fontSize: {

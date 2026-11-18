@@ -17,7 +17,7 @@ const isExternal = (href: string) => /^https?:/i.test(href);
 const isStore = (p: string) => p === "/" || /^\/(colecao|produto|busca)(\/|$)/.test(p);
 
 /**
- * Header editorial: a linguagem da marca (cantos retos, rótulos Jost em caixa alta,
+ * Header editorial: a linguagem da marca (cantos retos, rótulos Montserrat em caixa alta,
  * marca centralizada). Navegação à esquerda com sublinhado que cresce (Loja abre as
  * categorias); à direita busca, Entrar e Sacola com contador quadrado verde-oliva.
  * Abaixo de `lg`: hambúrguer + marca + Sacola.
