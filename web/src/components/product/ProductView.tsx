@@ -12,6 +12,7 @@ import {
   type SizeOptionDTO,
 } from "@movalev/shared";
 import { Gallery } from "./Gallery";
+import { Price } from "./Price";
 import { cardToCartLine, productHref } from "./ProductCard";
 import { Media } from "@/components/ui/Media";
 import { FavoriteHeart, MinusIcon, PlusIcon } from "@/components/ui/icons";
@@ -70,6 +71,7 @@ export function ProductView({ product, initialColor }: { product: ProductDetailD
       color,
       colors: product.colors,
       image: color.images[0] ?? null,
+      compareAtPriceCents: product.compareAtPriceCents,
       sizes: color.sizes,
     };
     cart.add([cardToCartLine(card, size)]);
@@ -97,7 +99,7 @@ export function ProductView({ product, initialColor }: { product: ProductDetailD
             )}
           </h1>
           <p className="enter mt-4 flex flex-wrap items-baseline gap-x-2" style={cascade(2)}>
-            <span key={price} className={cn("text-[24px] font-normal", touched && "swap-in")}>{formatBRL(price, { compact: true })}</span>
+            <Price key={price} cents={price} compareAt={price === product.priceCents ? product.compareAtPriceCents : null} className={cn("text-[24px] font-normal", touched && "swap-in")} compareClassName="text-[18px]" />
             <span className="text-body-sm font-light text-texto-2">· {installmentLabel(price)} · 5% off no Pix</span>
           </p>
           <p className="enter mt-3 text-body-sm font-light text-texto-2" style={cascade(3)}>

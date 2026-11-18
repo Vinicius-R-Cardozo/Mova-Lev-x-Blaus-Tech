@@ -99,8 +99,13 @@ enum Pictogram {
 }
 
 enum ProductStatus {
+  /// Na loja (listas, busca e página).
   ACTIVE
+  /// Em preparação: não aparece em lugar nenhum.
   DRAFT
+  /// Fora das listas e da busca; a página abre por link direto (sem indexar).
+  HIDDEN
+  /// Arquivado (exclusão lógica): some da loja e pode ser restaurado.
   ARCHIVED
 }
 
@@ -173,7 +178,14 @@ model Product {
   nameEmphasis  String?
   description   String
   fabricCare    String
+  /// Preço cobrado. Em promoção, é o preço promocional.
   priceCents    Int
+  /// Em promoção: preço original, exibido riscado. Nulo = sem promoção.
+  compareAtPriceCents Int?
+  /// SEO (vazios = gerados a partir do nome e da descrição).
+  seoTitle       String?
+  seoDescription String?
+  archivedAt     DateTime?
   badge         Badge?
   sensation     Sensation
   model         Model?

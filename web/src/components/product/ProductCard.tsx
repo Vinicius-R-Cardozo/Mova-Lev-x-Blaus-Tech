@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useId, useRef, useState } from "react";
 import { SENSATION_LABEL, formatBRL, installmentLabel, type ProductCardDTO, type SizeOptionDTO } from "@movalev/shared";
 import { Media } from "@/components/ui/Media";
+import { Price } from "./Price";
 import { SwatchDot } from "@/components/ui/Swatch";
 import { Badge } from "@/components/ui/Badge";
 import { CloseIcon, FavoriteHeart, PlusIcon } from "@/components/ui/icons";
@@ -101,7 +102,7 @@ export function ProductCard({ product, variant = "home", priority = false }: { p
             {product.name}
           </Link>
         </h3>
-        <p className="shrink-0 text-[16px] font-normal">{formatBRL(product.priceCents, { compact: true })}</p>
+        <p className="shrink-0 text-[16px] font-normal"><Price cents={product.priceCents} compareAt={product.compareAtPriceCents} compareClassName="text-[14px]" /></p>
       </div>
       {variant === "home" && <p className="mt-1 text-[14px] font-light text-texto-2">ou {installmentLabel(product.priceCents)}</p>}
     </article>

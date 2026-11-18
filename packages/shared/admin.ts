@@ -15,26 +15,57 @@ export const slugify = (s: string) =>
     .replace(/^-+|-+$/g, "")
     .slice(0, 80);
 
+export const PRODUCT_STATUSES = ["ACTIVE", "DRAFT", "HIDDEN", "ARCHIVED"] as const;
+export type ProductStatus = (typeof PRODUCT_STATUSES)[number];
+export const PRODUCT_STATUS_LABEL: Record<ProductStatus, string> = { ACTIVE: "Ativo", DRAFT: "Rascunho", HIDDEN: "Oculto", ARCHIVED: "Arquivado" };
+export const PRODUCT_STATUS_HINT: Record<ProductStatus, string> = {
+  ACTIVE: "Na loja: listas, busca e página.",
+  DRAFT: "Em preparação: não aparece na loja.",
+  HIDDEN: "Fora das listas e da busca; a página abre só por link direto.",
+  ARCHIVED: "Arquivado: some da loja e pode ser restaurado.",
+};
+
 export const adminProductSchema = z.object({
   name: z.string().trim().min(3).max(120),
   slug: z.string().trim().regex(/^[a-z0-9-]+$/, "Só letras minúsculas, números e hífen").max(80).optional(),
   nameEmphasis: z.string().trim().max(60).nullable().optional(),
   description: z.string().trim().min(10).max(2000),
   fabricCare: z.string().trim().min(10).max(2000),
+  /** Preço normal (no formulário). Com promoção, vira o preço riscado. */
   priceCents: cents.refine((v) => v > 0, "Preço obrigatório"),
+  /** Preço promocional (opcional): precisa ser menor que o preço normal. */
+  promoPriceCents: cents.nullable().default(null),
+  seoTitle: z.string().trim().max(70, "Até 70 caracteres").nullable().optional(),
+  seoDescription: z.string().trim().max(160, "Até 160 caracteres").nullable().optional(),
   badge: z.enum(BADGES).nullable(),
   sensation: z.enum(SENSATIONS),
   model: z.enum(MODELS).nullable(),
   pictogram: z.enum(PICTOGRAMS),
-  status: z.enum(["ACTIVE", "DRAFT", "ARCHIVED"]),
+  status: z.enum(PRODUCT_STATUSES),
   relevance: z.number().int().min(0).max(1000).default(0),
   collectionId: uuid.nullable(),
   categoryIds: z.array(uuid).max(10),
   colors: z.array(z.object({ colorId: uuid, featured: z.boolean() })).min(1, "Escolha ao menos uma cor").max(12),
   completeLookIds: z.array(uuid).max(6),
   youMayLikeIds: z.array(uuid).max(8),
+}).refine((p) => p.promoPriceCents === null || (p.promoPriceCents > 0 && p.promoPriceCents < p.priceCents), {
+  message: "O preço promocional precisa ser menor que o preço normal",
+  path: ["promoPriceCents"],
 });
 export type AdminProductInput = z.infer<typeof adminProductSchema>;
+
+/** Filtros da lista de produtos do painel. */
+export const adminProductListSchema = z.object({
+  q: z.string().trim().max(80).optional(),
+  status: z.enum(PRODUCT_STATUSES).optional(),
+  categoryId: uuid.optional(),
+  collectionId: uuid.optional(),
+  stock: z.enum(["baixo", "esgotado"]).optional(),
+  promo: z.coerce.boolean().optional(),
+  sort: z.enum(["nome", "recentes", "preco"]).default("nome"),
+  page: z.coerce.number().int().min(1).default(1),
+  perPage: z.coerce.number().int().min(10).max(100).default(25),
+});
 
 export const adminVariantsSchema = z.object({
   variants: z

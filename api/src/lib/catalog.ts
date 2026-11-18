@@ -39,15 +39,17 @@ export function toCard(p: CardProduct, colorSlugOrId?: string): ProductCardDTO {
   const pc = p.colors.find((c) => c.colorId === colorSlugOrId || c.color.slug === colorSlugOrId) ?? p.colors[0];
   if (!pc) throw new Error(`Produto ${p.slug} sem cores`);
   const colorImages = p.images.filter((i) => i.colorId === pc.colorId);
-  const front = colorImages.find((i) => i.kind === "FRENTE") ?? colorImages[0] ?? p.images[0] ?? null;
-  // 2ª foto para o hover: costas, senão outra foto publicada (não vídeo) da mesma cor.
-  const photos = colorImages.filter((i) => i !== front && i.kind !== "VIDEO" && i.storagePath);
-  const back = photos.find((i) => i.kind === "COSTAS") ?? photos[0] ?? null;
+  // Foto principal = 1ª foto publicada na ordem do painel; sem fotos, o placeholder de frente.
+  const published = colorImages.filter((i) => i.kind !== "VIDEO" && i.storagePath);
+  const front = published[0] ?? colorImages.find((i) => i.kind === "FRENTE") ?? colorImages[0] ?? p.images[0] ?? null;
+  // 2ª foto para o hover: a próxima publicada da mesma cor.
+  const back = published.find((i) => i !== front) ?? null;
   return {
     id: p.id,
     slug: p.slug,
     name: p.name,
     priceCents: p.priceCents,
+    compareAtPriceCents: p.compareAtPriceCents,
     badge: p.badge,
     sensation: p.sensation,
     model: p.model,

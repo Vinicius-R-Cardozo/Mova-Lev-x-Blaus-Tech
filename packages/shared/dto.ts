@@ -43,6 +43,8 @@ export interface ProductCardDTO {
   /** Todas as cores do produto (bolinhas). */
   colors: ColorDTO[];
   image: ImageDTO | null;
+  /** Em promoção: preço original (riscado). */
+  compareAtPriceCents?: number | null;
   /** 2ª foto da mesma cor (costas/lateral), mostrada no hover do card. */
   hoverImage?: ImageDTO | null;
   /** Tamanhos da cor do card, para a compra rápida. */
@@ -60,6 +62,12 @@ export interface ProductDetailDTO {
   name: string;
   nameEmphasis: string | null;
   priceCents: number;
+  /** Em promoção: preço original (riscado). */
+  compareAtPriceCents: number | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  /** Produto oculto: abre por link, mas não deve ser indexado. */
+  hidden: boolean;
   badge: Badge | null;
   sensation: Sensation;
   model: Model | null;

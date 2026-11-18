@@ -7,6 +7,7 @@ import {
   adminImageCreateSchema,
   adminImageOrderSchema,
   adminImageUpdateSchema,
+  adminProductListSchema,
   adminProductSchema,
   adminUploadSignSchema,
   adminVariantsSchema,
@@ -19,6 +20,7 @@ import { publicImageUrl, supabaseAdmin } from "../../lib/supabase";
 import { withIdempotency } from "../../lib/idempotency";
 import { revalidateStore } from "../../lib/revalidate";
 import { audit, diffSummary } from "../../lib/audit";
+import { lowStockThreshold } from "../../lib/settings";
 
 const PRODUCT_LABELS = { name: "Nome", slug: "URL", status: "Status", priceCents: "Preço", badge: "Selo", collectionId: "Coleção" };
 
@@ -38,6 +40,9 @@ const productDetailInclude = {
 function serializeProduct(p: Prisma.ProductGetPayload<{ include: typeof productDetailInclude }>) {
   return {
     ...p,
+    // Formulário: preço normal + promocional (no banco: cobrado + riscado).
+    priceCents: p.compareAtPriceCents ?? p.priceCents,
+    promoPriceCents: p.compareAtPriceCents ? p.priceCents : null,
     ratingAvg: p.ratingAvg ? Number(p.ratingAvg) : null,
     images: p.images.map((i) => ({ ...i, url: i.storagePath ? publicImageUrl(i.storagePath) : null })),
     categoryIds: p.categories.map((c) => c.categoryId),
@@ -55,12 +60,17 @@ async function writeProduct(tx: Prisma.TransactionClient, productId: string | nu
     nameEmphasis: input.nameEmphasis ?? null,
     description: input.description,
     fabricCare: input.fabricCare,
-    priceCents: input.priceCents,
+    // Em promoção, cobra o promocional e mostra o normal riscado.
+    priceCents: input.promoPriceCents ?? input.priceCents,
+    compareAtPriceCents: input.promoPriceCents ? input.priceCents : null,
+    seoTitle: input.seoTitle || null,
+    seoDescription: input.seoDescription || null,
     badge: input.badge,
     sensation: input.sensation,
     model: input.model,
     pictogram: input.pictogram,
     status: input.status,
+    archivedAt: input.status === "ARCHIVED" ? new Date() : null,
     relevance: input.relevance,
     collectionId: input.collectionId,
   };
@@ -107,24 +117,64 @@ export async function adminCatalogRoutes(app: FastifyInstance) {
 
   // ── Produtos ──
   app.get("/admin/products", { config: { allow: "staff" } }, async (req) => {
-    const { q, status } = z.object({ q: z.string().trim().max(60).optional(), status: z.enum(["ACTIVE", "DRAFT", "ARCHIVED"]).optional() }).parse(req.query);
-    const rows = await prisma.product.findMany({
-      where: { ...(status ? { status } : {}), ...(q ? { name: { contains: q, mode: "insensitive" } } : {}) },
-      orderBy: [{ status: "asc" }, { name: "asc" }],
-      include: { variants: { select: { stock: true } }, colors: { include: { color: true }, orderBy: { sortOrder: "asc" } }, _count: { select: { images: { where: { storagePath: { not: null } } } } } },
-    });
-    return rows.map((p) => ({
-      id: p.id,
-      name: p.name,
-      slug: p.slug,
-      status: p.status,
-      priceCents: p.priceCents,
-      badge: p.badge,
-      stock: p.variants.reduce((n, v) => n + v.stock, 0),
-      soldOutVariants: p.variants.filter((v) => v.stock === 0).length,
-      colors: p.colors.map((c) => ({ name: c.color.name, hex: c.color.hex })),
-      photos: p._count.images,
-    }));
+    const f = adminProductListSchema.parse(req.query);
+    const threshold = await lowStockThreshold();
+    const where: Prisma.ProductWhereInput = {
+      // Arquivados só aparecem quando filtrados.
+      status: f.status ?? { not: "ARCHIVED" },
+      ...(f.categoryId ? { categories: { some: { categoryId: f.categoryId } } } : {}),
+      ...(f.collectionId ? { collectionId: f.collectionId } : {}),
+      ...(f.promo ? { compareAtPriceCents: { not: null } } : {}),
+      ...(f.stock === "esgotado" ? { variants: { some: { stock: 0 } } } : f.stock === "baixo" ? { variants: { some: { stock: { gt: 0, lte: threshold } } } } : {}),
+      ...(f.q
+        ? {
+            OR: [
+              { name: { contains: f.q, mode: "insensitive" } },
+              { slug: { contains: f.q.toLowerCase() } },
+              { variants: { some: { sku: { contains: f.q.toUpperCase() } } } },
+            ],
+          }
+        : {}),
+    };
+    const orderBy: Prisma.ProductOrderByWithRelationInput[] =
+      f.sort === "recentes" ? [{ createdAt: "desc" }] : f.sort === "preco" ? [{ priceCents: "asc" }] : [{ name: "asc" }];
+    const [total, rows] = await Promise.all([
+      prisma.product.count({ where }),
+      prisma.product.findMany({
+        where,
+        orderBy,
+        skip: (f.page - 1) * f.perPage,
+        take: f.perPage,
+        include: {
+          variants: { select: { stock: true } },
+          colors: { include: { color: true }, orderBy: { sortOrder: "asc" } },
+          images: { where: { storagePath: { not: null }, kind: { not: "VIDEO" } }, orderBy: { sortOrder: "asc" }, take: 1, select: { storagePath: true } },
+          _count: { select: { images: { where: { storagePath: { not: null } } } } },
+        },
+      }),
+    ]);
+    return {
+      total,
+      page: f.page,
+      perPage: f.perPage,
+      lowStockThreshold: threshold,
+      items: rows.map((p) => ({
+        id: p.id,
+        name: p.name,
+        slug: p.slug,
+        status: p.status,
+        priceCents: p.priceCents,
+        compareAtPriceCents: p.compareAtPriceCents,
+        badge: p.badge,
+        stock: p.variants.reduce((n, v) => n + v.stock, 0),
+        soldOutVariants: p.variants.filter((v) => v.stock === 0).length,
+        lowVariants: p.variants.filter((v) => v.stock > 0 && v.stock <= threshold).length,
+        colors: p.colors.map((c) => ({ name: c.color.name, hex: c.color.hex })),
+        photos: p._count.images,
+        thumb: p.images[0]?.storagePath ? publicImageUrl(p.images[0].storagePath) : null,
+        updatedAt: p.updatedAt,
+      })),
+    };
   });
 
   app.get<{ Params: { id: string } }>("/admin/products/:id", { config: { allow: "staff" } }, async (req, reply) => {
@@ -209,6 +259,98 @@ export async function adminCatalogRoutes(app: FastifyInstance) {
     return prisma.variant.findMany({ where: { productId }, orderBy: [{ colorId: "asc" }, { size: "asc" }] });
   });
 
+  // ── Duplicar, arquivar, restaurar e excluir ──
+
+  /** Duplica como rascunho: dados, cores, categorias, relações, variantes (estoque 0) e fotos. */
+  app.post<{ Params: { id: string } }>("/admin/products/:id/duplicate", { config: { allow: "staff" } }, async (req, reply) => {
+    const srcId = id.parse(req.params.id);
+    const src = await prisma.product.findUnique({ where: { id: srcId }, include: { categories: true, colors: true, related: true, variants: true, images: true } });
+    if (!src) return notFound(reply);
+    let slug = `${src.slug}-copia`.slice(0, 80);
+    for (let n = 2; await prisma.product.findUnique({ where: { slug }, select: { id: true } }); n++) slug = `${src.slug}-copia-${n}`.slice(0, 80);
+    const suffix = `-C${Date.now().toString(36).slice(-4).toUpperCase()}`;
+    const copy = await prisma.$transaction(async (tx) => {
+      const p = await tx.product.create({
+        data: {
+          slug,
+          name: `${src.name} (cópia)`.slice(0, 120),
+          nameEmphasis: src.nameEmphasis,
+          description: src.description,
+          fabricCare: src.fabricCare,
+          priceCents: src.priceCents,
+          compareAtPriceCents: src.compareAtPriceCents,
+          seoTitle: null,
+          seoDescription: src.seoDescription,
+          badge: src.badge,
+          sensation: src.sensation,
+          model: src.model,
+          pictogram: src.pictogram,
+          status: "DRAFT",
+          relevance: src.relevance,
+          collectionId: src.collectionId,
+        },
+      });
+      if (src.categories.length) await tx.productCategory.createMany({ data: src.categories.map((c) => ({ productId: p.id, categoryId: c.categoryId, sortOrder: c.sortOrder })) });
+      if (src.colors.length) await tx.productColor.createMany({ data: src.colors.map((c) => ({ productId: p.id, colorId: c.colorId, sortOrder: c.sortOrder, featured: c.featured })) });
+      if (src.related.length) await tx.productRelation.createMany({ data: src.related.map((r) => ({ productId: p.id, relatedId: r.relatedId, kind: r.kind, sortOrder: r.sortOrder })) });
+      if (src.variants.length)
+        await tx.variant.createMany({ data: src.variants.map((v) => ({ productId: p.id, colorId: v.colorId, size: v.size, sku: `${v.sku}${suffix}`.slice(0, 40), stock: 0, priceCents: v.priceCents })) });
+      // As fotos apontam para os mesmos arquivos (excluir numa não apaga o arquivo da outra).
+      if (src.images.length)
+        await tx.productImage.createMany({ data: src.images.map((i) => ({ productId: p.id, colorId: i.colorId, kind: i.kind, storagePath: i.storagePath, videoUrl: i.videoUrl, alt: i.alt, caption: i.caption, sortOrder: i.sortOrder })) });
+      return p;
+    });
+    await audit(req, { action: "product.duplicate", entity: "produto", entityId: copy.id, summary: `Duplicou "${src.name}" (nova cópia em rascunho, estoque zerado)`, before: { from: srcId } });
+    return reply.code(201).send({ id: copy.id, slug: copy.slug });
+  });
+
+  /** Arquivar (exclusão lógica): some da loja, pode ser restaurado. */
+  app.post<{ Params: { id: string } }>("/admin/products/:id/archive", { config: { allow: "staff" } }, async (req, reply) => {
+    const productId = id.parse(req.params.id);
+    const p = await prisma.product.findUnique({ where: { id: productId }, select: { name: true, status: true } });
+    if (!p) return notFound(reply);
+    if (p.status !== "ARCHIVED") {
+      await prisma.product.update({ where: { id: productId }, data: { status: "ARCHIVED", archivedAt: new Date() } });
+      await audit(req, { action: "product.archive", entity: "produto", entityId: productId, summary: `Arquivou "${p.name}"`, before: { status: p.status }, after: { status: "ARCHIVED" } });
+      revalidateStore(["catalog", "home"]);
+    }
+    return { ok: true };
+  });
+
+  /** Restaurar volta como rascunho (revise antes de publicar). */
+  app.post<{ Params: { id: string } }>("/admin/products/:id/restore", { config: { allow: "staff" } }, async (req, reply) => {
+    const productId = id.parse(req.params.id);
+    const p = await prisma.product.findUnique({ where: { id: productId }, select: { name: true, status: true } });
+    if (!p) return notFound(reply);
+    if (p.status === "ARCHIVED") {
+      await prisma.product.update({ where: { id: productId }, data: { status: "DRAFT", archivedAt: null } });
+      await audit(req, { action: "product.restore", entity: "produto", entityId: productId, summary: `Restaurou "${p.name}" como rascunho`, before: { status: "ARCHIVED" }, after: { status: "DRAFT" } });
+    }
+    return { ok: true };
+  });
+
+  /**
+   * Exclusão definitiva: só de produto arquivado e que nunca foi vendido (pedidos
+   * guardam o histórico das variantes). Apaga do Storage só arquivos que nenhum
+   * outro produto usa (cópias compartilham fotos).
+   */
+  app.delete<{ Params: { id: string } }>("/admin/products/:id", { config: { allow: "staff" } }, async (req, reply) => {
+    const productId = id.parse(req.params.id);
+    const p = await prisma.product.findUnique({ where: { id: productId }, include: { images: { select: { storagePath: true } } } });
+    if (!p) return reply.code(204).send();
+    if (p.status !== "ARCHIVED") return reply.code(409).send({ error: "nao_arquivado", message: "Arquive o produto antes de excluir de vez." });
+    const sold = await prisma.orderItem.count({ where: { variant: { productId } } });
+    if (sold > 0) return reply.code(409).send({ error: "tem_vendas", message: `Este produto já foi vendido (${sold} ${sold === 1 ? "item" : "itens"} em pedidos). Ele fica arquivado para manter o histórico.` });
+    const paths = p.images.map((i) => i.storagePath).filter((x): x is string => !!x);
+    await prisma.product.delete({ where: { id: productId } });
+    const stillUsed = await prisma.productImage.findMany({ where: { storagePath: { in: paths } }, select: { storagePath: true } });
+    const orphan = paths.filter((x) => !stillUsed.some((u) => u.storagePath === x));
+    if (orphan.length) await supabaseAdmin().storage.from(env.STORAGE_BUCKET).remove(orphan).catch(() => undefined);
+    await audit(req, { action: "product.delete", entity: "produto", entityId: productId, summary: `Excluiu de vez "${p.name}"`, before: { name: p.name, slug: p.slug, priceCents: p.priceCents } });
+    revalidateStore(["catalog", "home"]);
+    return reply.code(204).send();
+  });
+
   // ── Fotos: upload direto para o Storage com URL assinada (o arquivo não passa pela API) ──
   app.post("/admin/uploads/sign", { config: { allow: "staff" } }, async (req, reply) => {
     const input = adminUploadSignSchema.parse(req.body);
@@ -265,7 +407,10 @@ export async function adminCatalogRoutes(app: FastifyInstance) {
     const image = await prisma.productImage.findUnique({ where: { id: id.parse(req.params.imageId) } });
     if (!image) return reply.code(204).send();
     await prisma.productImage.delete({ where: { id: image.id } });
-    if (image.storagePath) await supabaseAdmin().storage.from(env.STORAGE_BUCKET).remove([image.storagePath]);
+    // Cópias de produto compartilham o arquivo: só apaga do Storage se ninguém mais usa.
+    if (image.storagePath && !(await prisma.productImage.count({ where: { storagePath: image.storagePath } }))) {
+      await supabaseAdmin().storage.from(env.STORAGE_BUCKET).remove([image.storagePath]);
+    }
     await audit(req, { action: "image.delete", entity: "produto", entityId: image.productId, summary: `Excluiu foto (${image.kind})`, before: { storagePath: image.storagePath, alt: image.alt } });
     revalidateStore(["catalog", "home"]);
     return reply.code(204).send();

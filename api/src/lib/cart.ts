@@ -40,7 +40,7 @@ export async function buildLines(items: { variantId: string; quantity: number }[
     where: { id: { in: normalized.map((i) => i.variantId) } },
     include: {
       color: true,
-      product: { select: { id: true, slug: true, name: true, priceCents: true, pictogram: true, status: true, images: { where: { kind: "FRENTE" }, orderBy: { sortOrder: "asc" } } } },
+      product: { select: { id: true, slug: true, name: true, priceCents: true, pictogram: true, status: true, images: { where: { storagePath: { not: null }, kind: { not: "VIDEO" } }, orderBy: { sortOrder: "asc" } } } },
     },
   });
   const byId = new Map(variants.map((v) => [v.id, v]));
@@ -48,7 +48,8 @@ export async function buildLines(items: { variantId: string; quantity: number }[
   const removed: string[] = [];
   for (const item of normalized) {
     const v = byId.get(item.variantId);
-    if (!v || v.product.status !== "ACTIVE") {
+    // Oculto também pode ser comprado (quem tem o link).
+    if (!v || (v.product.status !== "ACTIVE" && v.product.status !== "HIDDEN")) {
       removed.push(item.variantId);
       continue;
     }

@@ -23,11 +23,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const p = await api.product(slug).catch(() => null);
   if (!p) return {};
   const image = p.colors[0]?.images.find((i) => i.url)?.url;
+  const description = p.seoDescription || p.description.slice(0, 160);
   return {
-    title: p.name,
-    description: p.description,
+    title: p.seoTitle ? { absolute: p.seoTitle } : p.name,
+    description,
     alternates: { canonical: `/produto/${p.slug}` },
-    openGraph: { title: `${p.name} · MOVA LEV`, description: p.description, images: image ? [image] : undefined },
+    // Produto oculto abre por link, mas não entra no Google.
+    ...(p.hidden ? { robots: { index: false, follow: false } } : {}),
+    openGraph: { title: p.seoTitle || `${p.name} · MOVA LEV`, description, images: image ? [image] : undefined },
   };
 }
 

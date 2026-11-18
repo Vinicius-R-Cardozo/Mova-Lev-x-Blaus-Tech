@@ -214,8 +214,9 @@ export async function catalogRoutes(app: FastifyInstance) {
   // ── Produto ──
   app.get<{ Params: { slug: string } }>("/catalog/products/:slug", async (req, reply) => {
     const slug = z.string().regex(/^[a-z0-9-]+$/).max(120).parse(req.params.slug);
+    // Oculto abre por link direto (a página fica sem indexação).
     const p = await prisma.product.findFirst({
-      where: { slug, status: "ACTIVE" },
+      where: { slug, status: { in: ["ACTIVE", "HIDDEN"] } },
       include: {
         ...cardInclude,
         collection: true,
@@ -249,6 +250,10 @@ export async function catalogRoutes(app: FastifyInstance) {
       name: p.name,
       nameEmphasis: p.nameEmphasis,
       priceCents: p.priceCents,
+      compareAtPriceCents: p.compareAtPriceCents,
+      seoTitle: p.seoTitle,
+      seoDescription: p.seoDescription,
+      hidden: p.status === "HIDDEN",
       badge: p.badge,
       sensation: p.sensation,
       model: p.model,

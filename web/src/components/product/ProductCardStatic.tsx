@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { formatBRL, type ProductCardDTO } from "@movalev/shared";
+import type { ProductCardDTO } from "@movalev/shared";
 import { Media } from "@/components/ui/Media";
+import { Price } from "./Price";
 
 /** Card só de leitura (sem compra rápida/favorito): renderizado no servidor, sem JavaScript. */
 export function ProductCardStatic({ product }: { product: ProductCardDTO }) {
@@ -18,7 +19,7 @@ export function ProductCardStatic({ product }: { product: ProductCardDTO }) {
             {product.name}
           </Link>
         </h3>
-        <p className="shrink-0 text-[16px] font-normal">{formatBRL(product.priceCents, { compact: true })}</p>
+        <p className="shrink-0 text-[16px] font-normal"><Price cents={product.priceCents} compareAt={product.compareAtPriceCents} compareClassName="text-[14px]" /></p>
       </div>
     </article>
   );
