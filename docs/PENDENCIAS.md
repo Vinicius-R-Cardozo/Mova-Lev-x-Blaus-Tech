@@ -4,7 +4,7 @@
 - [x] **GitHub:** código enviado para github.com/Vinicius-R-Cardozo/Mova-Lev-x-Blaus-Tech (público).
 - [x] **Vercel:** loja publicada em **https://mova-lev.vercel.app** (projeto `mova-lev`, raiz `web`, ligado ao GitHub — cada push na `main` publica). Supabase Auth já aponta para esse endereço.
 - [x] **Render:** API no ar em **https://mova-lev-x-blaus-tech.onrender.com** (plano Free, região Oregon). Loja apontando para ela.
-- [ ] **Render não publica sozinho após o push** (Auto-Deploy “On Commit”, mas nenhum deploy automático aconteceu). Corrigir: GitHub → Settings → Applications → Installed GitHub Apps → **Render → Configure** → dar acesso ao repositório `Mova-Lev-x-Blaus-Tech`. Até lá: **Manual Deploy → Deploy latest commit** a cada mudança na API.
+- [x] **Deploy automático do Render** funcionando (app do Render com acesso ao repositório; testado em 18/11 com o commit 0ca34ce, publicado em ~2 min). O `/health` mostra o commit no ar.
 - [ ] **`DATABASE_URL` no Render ainda está no modo transação (porta 6543).** A API contorna sozinha usando a `DIRECT_URL` (modo sessão), mas o certo é corrigir o valor em Environment (deve terminar em `:5432/postgres?connection_limit=5`).
 - [ ] (Opcional) Recriar a API na região **Virginia**: ~120 ms por ida e volta ao banco em vez de ~180 ms (Oregon). O Render não tem região no Brasil.
 - [ ] Plano Free do Render: a API dorme após 15 min sem uso e a 1ª visita depois disso espera ~50 s. Para vender, plano **Starter** (US$ 7/mês).
