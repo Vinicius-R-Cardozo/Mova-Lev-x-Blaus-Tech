@@ -16,6 +16,7 @@ import { prisma } from "../../lib/prisma";
 import { withIdempotency } from "../../lib/idempotency";
 import { cancelOrder, sendConfirmationEmail, toOrderDTO } from "../../lib/orders";
 import { revalidateStore } from "../../lib/revalidate";
+import { audit, diffSummary } from "../../lib/audit";
 
 const id = z.string().uuid();
 
@@ -162,6 +163,7 @@ export async function adminOperationsRoutes(app: FastifyInstance) {
     }
     if (status === "CANCELADO") {
       const done = await cancelOrder(orderId, "Cancelado pelo admin. Estoque devolvido.", actor);
+      if (done) await audit(req, { action: "order.cancel", entity: "pedido", entityId: orderId, summary: `Pedido #${order.number} cancelado (estoque devolvido)`, before: { status: order.status }, after: { status } });
       return { ok: true, changed: done };
     }
     const moved = await prisma.order.updateMany({
@@ -170,13 +172,15 @@ export async function adminOperationsRoutes(app: FastifyInstance) {
     });
     if (moved.count === 0) return reply.code(409).send({ error: "conflito", message: "O pedido mudou enquanto você editava. Recarregue." });
     await prisma.orderEvent.create({ data: { orderId, status, message: `Status: ${ORDER_STATUS_LABEL[status]}${trackingCode ? ` · rastreio ${trackingCode}` : ""}`, actor } });
+    await audit(req, { action: "order.status", entity: "pedido", entityId: orderId, summary: `Pedido #${order.number}: ${ORDER_STATUS_LABEL[order.status]} → ${ORDER_STATUS_LABEL[status]}`, before: { status: order.status }, after: { status, trackingCode } });
     return { ok: true, changed: true };
   });
 
   app.put<{ Params: { id: string } }>("/admin/orders/:id/tracking", async (req) => {
     const orderId = id.parse(req.params.id);
     const { trackingCode } = adminTrackingSchema.parse(req.body);
-    await prisma.order.update({ where: { id: orderId }, data: { trackingCode: trackingCode || null } });
+    const o = await prisma.order.update({ where: { id: orderId }, data: { trackingCode: trackingCode || null } });
+    await audit(req, { action: "order.tracking", entity: "pedido", entityId: orderId, summary: `Pedido #${o.number}: rastreio ${trackingCode || "removido"}` });
     await prisma.orderEvent.create({ data: { orderId, message: trackingCode ? `Código de rastreio: ${trackingCode}` : "Código de rastreio removido", actor: `admin:${req.user!.email}` } });
     return { ok: true };
   });
@@ -194,6 +198,7 @@ export async function adminOperationsRoutes(app: FastifyInstance) {
       const input = adminCouponSchema.parse(req.body);
       if (await prisma.coupon.findUnique({ where: { code: input.code } })) return { status: 409, body: { error: "duplicado", message: "Já existe um cupom com esse código." } };
       const c = await prisma.coupon.create({ data: input });
+      await audit(req, { action: "coupon.create", entity: "cupom", entityId: c.id, summary: `Criou o cupom ${c.code}`, after: input });
       return { status: 201, body: c };
     }),
   );
@@ -203,7 +208,11 @@ export async function adminOperationsRoutes(app: FastifyInstance) {
     const input = adminCouponSchema.parse(req.body);
     const clash = await prisma.coupon.findFirst({ where: { code: input.code, id: { not: couponId } } });
     if (clash) return reply.code(409).send({ error: "duplicado", message: "Já existe um cupom com esse código." });
-    return prisma.coupon.update({ where: { id: couponId }, data: input });
+    const prev = await prisma.coupon.findUnique({ where: { id: couponId } });
+    const c = await prisma.coupon.update({ where: { id: couponId }, data: input });
+    const d = diffSummary((prev ?? {}) as Record<string, unknown>, c as unknown as Record<string, unknown>, { code: "Código", value: "Valor", type: "Tipo", active: "Ativo", minSubtotalCents: "Mínimo", maxRedemptions: "Limite" });
+    await audit(req, { action: "coupon.update", entity: "cupom", entityId: c.id, summary: `Cupom ${c.code}${d.summary ? ` — ${d.summary}` : ""}`, before: d.before, after: d.after });
+    return c;
   });
 
   // ── Regras: desconto progressivo e frete ──
@@ -211,6 +220,8 @@ export async function adminOperationsRoutes(app: FastifyInstance) {
 
   app.put("/admin/settings/progressive", async (req) => {
     const { tiers } = adminTiersSchema.parse(req.body);
+    const prevTiers = await prisma.progressiveTier.findMany({ orderBy: { minItems: "asc" } });
+    await audit(req, { action: "settings.progressive", entity: "configuracao", entityId: "progressivo", summary: `Desconto progressivo: ${tiers.map((t) => `${t.minItems}+ = ${t.percent}%`).join(", ")}`, before: prevTiers, after: tiers });
     await prisma.$transaction([prisma.progressiveTier.deleteMany({}), prisma.progressiveTier.createMany({ data: tiers })]);
     revalidateStore(["catalog", "home"]);
     return { tiers };
@@ -225,6 +236,8 @@ export async function adminOperationsRoutes(app: FastifyInstance) {
   app.put("/admin/settings/shipping", async (req) => {
     const input = adminShippingSchema.parse(req.body);
     const value = { freeShippingThresholdCents: input.freeShippingThresholdCents, pickup: input.pickup };
+    const prevShip = await prisma.setting.findUnique({ where: { key: "shipping" } });
+    await audit(req, { action: "settings.shipping", entity: "configuracao", entityId: "frete", summary: "Editou frete e retirada", before: prevShip?.value ?? null, after: input });
     await prisma.$transaction([
       prisma.setting.upsert({ where: { key: "shipping" }, create: { key: "shipping", value }, update: { value } }),
       prisma.shippingRegion.deleteMany({}),

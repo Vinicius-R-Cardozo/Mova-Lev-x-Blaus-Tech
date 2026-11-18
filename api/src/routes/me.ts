@@ -7,7 +7,7 @@ import { withIdempotency } from "../lib/idempotency";
 import { cardInclude, toCard } from "../lib/catalog";
 
 const profileSelect = { id: true, email: true, name: true, phone: true, cpf: true, role: true, createdAt: true } as const;
-const toProfile = (p: { id: string; email: string; name: string | null; phone: string | null; cpf: string | null; role: "CUSTOMER" | "ADMIN"; createdAt: Date }): ProfileDTO => ({
+const toProfile = (p: { id: string; email: string; name: string | null; phone: string | null; cpf: string | null; role: "CUSTOMER" | "EDITOR" | "ADMIN"; createdAt: Date }): ProfileDTO => ({
   ...p,
   createdAt: p.createdAt.toISOString(),
 });

@@ -20,6 +20,9 @@ datasource db {
 
 enum Role {
   CUSTOMER
+  /// Equipe com acesso a produtos, coleções, estoque e conteúdo.
+  EDITOR
+  /// Acesso total ao painel.
   ADMIN
 }
 
@@ -31,6 +34,9 @@ model Profile {
   phone     String?
   cpf       String?
   role      Role      @default(CUSTOMER)
+  /// Senha provisória (criada pelo script ou convite): troca obrigatória no 1º acesso ao painel.
+  mustChangePassword Boolean @default(false)
+  lastAdminLoginAt   DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   addresses Address[]
@@ -529,4 +535,42 @@ model ContactMessage {
 
   @@index([createdAt])
   @@map("contact_messages")
+}
+
+// ───────────────────────────── Painel: segurança e auditoria ─────────────────────────────
+
+/// Registro de atividades do painel: quem alterou o quê e quando.
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  actorId    String?  @db.Uuid
+  actorEmail String
+  actorRole  Role
+  /// Ex.: product.update, variant.stock, order.status, coupon.delete
+  action     String
+  entity     String
+  entityId   String?
+  /// Resumo legível ("Preço: R$ 289 → R$ 259").
+  summary    String?
+  before     Json?
+  after      Json?
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([entity, entityId])
+  @@index([actorId])
+  @@map("audit_logs")
+}
+
+/// Tentativas de login no painel (proteção contra força bruta).
+model LoginAttempt {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String
+  ip        String?
+  success   Boolean
+  createdAt DateTime @default(now())
+
+  @@index([email, createdAt])
+  @@index([ip, createdAt])
+  @@map("login_attempts")
 }

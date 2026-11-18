@@ -137,3 +137,24 @@ export const adminCollectionSchema = z.object({
   season: z.string().trim().max(40).nullable().optional(),
   description: z.string().trim().max(400).nullable().optional(),
 });
+
+// ───────────────────────────── Acesso ao painel ─────────────────────────────
+
+export const ADMIN_ROLES = ["ADMIN", "EDITOR"] as const;
+export type AdminRole = (typeof ADMIN_ROLES)[number];
+export const ROLE_LABEL: Record<AdminRole | "CUSTOMER", string> = { ADMIN: "Administrador", EDITOR: "Editor", CUSTOMER: "Cliente" };
+
+export const adminLoginSchema = z.object({
+  email: z.string().trim().toLowerCase().email("E-mail inválido").max(160),
+  password: z.string().min(1, "Informe a senha").max(200),
+});
+
+/** Senha do painel: 10+ caracteres, com letra e número. */
+export const adminPasswordSchema = z.object({
+  password: z
+    .string()
+    .min(10, "Use pelo menos 10 caracteres")
+    .max(128, "Senha longa demais")
+    .regex(/[A-Za-zÀ-ÿ]/, "Inclua pelo menos uma letra")
+    .regex(/\d/, "Inclua pelo menos um número"),
+});

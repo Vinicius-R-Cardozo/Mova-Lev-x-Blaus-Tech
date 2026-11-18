@@ -218,7 +218,7 @@ export interface ProfileDTO {
   name: string | null;
   phone: string | null;
   cpf: string | null;
-  role: "CUSTOMER" | "ADMIN";
+  role: "CUSTOMER" | "EDITOR" | "ADMIN";
   createdAt: string;
 }
 

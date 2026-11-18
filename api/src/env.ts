@@ -20,6 +20,13 @@ const schema = z.object({
   /** Rota de revalidação da loja (ex.: https://movalev.com.br/api/revalidate) e segredo compartilhado. */
   WEB_REVALIDATE_URL: z.string().url().optional().or(z.literal("").transform(() => undefined)),
   REVALIDATE_SECRET: z.string().min(24).optional().or(z.literal("").transform(() => undefined)),
+  /** Painel: exige 2º fator (TOTP). Só desligue em desenvolvimento. */
+  ADMIN_MFA_REQUIRED: z
+    .enum(["true", "false"])
+    .default("true")
+    .transform((v) => v === "true"),
+  /** Painel: horas máximas desde o login (renovar o token não estende). */
+  ADMIN_SESSION_HOURS: z.coerce.number().int().min(1).max(72).default(12),
 });
 
 const parsed = schema.safeParse(process.env);

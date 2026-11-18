@@ -47,7 +47,7 @@ function Gate({ children }: { children: React.ReactNode }) {
                 </li>
               );
             })}
-            {auth.profile?.role === "ADMIN" && (
+            {(auth.profile?.role === "ADMIN" || auth.profile?.role === "EDITOR") && (
               <li className="shrink-0">
                 <Link href="/admin" className="flex min-h-touch items-center text-[16px] font-light text-oliva hover:underline">
                   Painel admin

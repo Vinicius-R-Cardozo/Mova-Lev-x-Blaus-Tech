@@ -68,7 +68,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const apiFetch = useCallback(
     async <T,>(path: string, init: RequestInit & { idempotencyKey?: string } = {}): Promise<T> => {
-      const { idempotencyKey, ...rest } = init;
+      const { idempotencyKey: givenKey, ...rest } = init;
+      const isAdmin = path.startsWith("/admin");
+      const mutating = !!rest.method && rest.method.toUpperCase() !== "GET";
+      // Painel: toda escrita leva um identificador único (a API recusa repetição).
+      const idempotencyKey = givenKey ?? (isAdmin && mutating ? crypto.randomUUID() : undefined);
       const res = await fetch(`${API_URL}${path}`, {
         ...rest,
         headers: {
@@ -83,6 +87,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = ct.includes("json") ? await res.json() : await res.text();
       if (!res.ok) {
         const d = data as { error?: string; message?: string };
+        // Sessão do painel inválida/expirada ou sem 2º fator: volta ao login do painel.
+        if (isAdmin && res.status === 401 && typeof window !== "undefined" && !window.location.pathname.startsWith("/admin/login")) {
+          const motivo = d?.error === "mfa_obrigatorio" ? "mfa" : d?.error === "sessao_expirada" ? "expirada" : "";
+          window.location.assign(`/admin/login?next=${encodeURIComponent(window.location.pathname)}${motivo ? `&motivo=${motivo}` : ""}`);
+        }
         throw new ApiError(res.status, d?.error ?? "erro", d?.message ?? "Não foi possível concluir.");
       }
       return data as T;

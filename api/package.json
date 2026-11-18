@@ -16,6 +16,7 @@
     "db:seed": "tsx --env-file=.env prisma/seed.ts",
     "db:reset": "prisma migrate reset --force",
     "demo:fotos": "tsx --env-file=.env scripts/demo-fotos.ts",
+    "admin:criar": "tsx --env-file=.env scripts/admin-criar.ts",
     "postinstall": "prisma generate"
   },
   "prisma": {
