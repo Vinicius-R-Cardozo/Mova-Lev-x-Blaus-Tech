@@ -189,3 +189,52 @@ export const adminPasswordSchema = z.object({
     .regex(/[A-Za-zÀ-ÿ]/, "Inclua pelo menos uma letra")
     .regex(/\d/, "Inclua pelo menos um número"),
 });
+
+// ───────────────────────────── Estoque ─────────────────────────────
+
+export const STOCK_MOVEMENT_TYPES = ["VENDA", "CANCELAMENTO", "ENTRADA", "SAIDA", "AJUSTE", "DEVOLUCAO"] as const;
+export type StockMovementType = (typeof STOCK_MOVEMENT_TYPES)[number];
+export const STOCK_MOVEMENT_LABEL: Record<StockMovementType, string> = {
+  VENDA: "Venda",
+  CANCELAMENTO: "Cancelamento",
+  ENTRADA: "Entrada",
+  SAIDA: "Saída (perda/avaria)",
+  AJUSTE: "Ajuste de contagem",
+  DEVOLUCAO: "Devolução",
+};
+/** Motivos que a equipe escolhe num ajuste manual (venda e cancelamento são automáticos). */
+export const MANUAL_STOCK_TYPES = ["ENTRADA", "SAIDA", "AJUSTE", "DEVOLUCAO"] as const;
+
+export const adminStockAdjustSchema = z
+  .object({
+    variantId: uuid,
+    type: z.enum(MANUAL_STOCK_TYPES),
+    /** ENTRADA/DEVOLUCAO somam, SAIDA subtrai, AJUSTE define a contagem exata. */
+    quantity: z.number().int("Use números inteiros").min(0, "Não pode ser negativo").max(100_000),
+    note: z.string().trim().max(200).optional(),
+    /** Estoque que a pessoa viu na tela: se mudou (venda no meio), a API recusa. */
+    expectedStock: z.number().int().min(0).optional(),
+  })
+  .refine((a) => a.type === "AJUSTE" || a.quantity > 0, { message: "Informe a quantidade", path: ["quantity"] })
+  .refine((a) => a.type !== "AJUSTE" && a.type !== "SAIDA" ? true : (a.note ?? "").length >= 3, { message: "Explique o motivo (mín. 3 letras)", path: ["note"] });
+export type AdminStockAdjust = z.infer<typeof adminStockAdjustSchema>;
+
+export const adminStockListSchema = z.object({
+  q: z.string().trim().max(80).optional(),
+  status: z.enum(["esgotado", "baixo", "ok"]).optional(),
+  categoryId: uuid.optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  perPage: z.coerce.number().int().min(10).max(200).default(50),
+});
+
+export const adminMovementListSchema = z.object({
+  variantId: uuid.optional(),
+  productId: uuid.optional(),
+  type: z.enum(STOCK_MOVEMENT_TYPES).optional(),
+  from: z.coerce.date().optional(),
+  to: z.coerce.date().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  perPage: z.coerce.number().int().min(10).max(100).default(30),
+});
+
+export const adminStockSettingsSchema = z.object({ lowStockThreshold: z.number().int().min(0).max(1000) });

@@ -2,6 +2,7 @@ import { Prisma, type Order, type OrderItem } from "@prisma/client";
 import { computePricing, type OrderDTO, type OrderInput } from "@movalev/shared";
 import { env } from "../env";
 import { prisma } from "./prisma";
+import { recordMovement } from "./stock";
 import { buildLines, checkCoupon, loadShippingSettings, loadTiers } from "./cart";
 import { lookupCep } from "./viacep";
 import { shippingProvider } from "../providers/shipping";
@@ -118,6 +119,9 @@ export async function createOrder(input: OrderInput, ctx: { idempotencyKey: stri
         for (const l of lines) {
           const r = await tx.variant.updateMany({ where: { id: l.variantId, stock: { gte: l.quantity } }, data: { stock: { decrement: l.quantity } } });
           if (r.count === 0) throw new CheckoutError(409, "sem_estoque", `${l.name} (${l.colorName}, ${l.size}) acabou de esgotar.`);
+          // Histórico: a venda baixa o estoque automaticamente (na mesma transação).
+          const after = await tx.variant.findUniqueOrThrow({ where: { id: l.variantId }, select: { stock: true } });
+          await recordMovement(tx, { variantId: l.variantId, type: "VENDA", delta: -l.quantity, stockAfter: after.stock, orderId: created.id, note: `Pedido #${created.number}` });
         }
         // SKU real na linha do pedido.
         const skus = await tx.variant.findMany({ where: { id: { in: lines.map((l) => l.variantId) } }, select: { id: true, sku: true } });
@@ -216,7 +220,19 @@ export async function cancelOrder(
     });
     if (claimed.count === 0) return false;
     const items = await tx.orderItem.findMany({ where: { orderId } });
-    for (const i of items) await tx.variant.update({ where: { id: i.variantId }, data: { stock: { increment: i.quantity } } });
+    const order = await tx.order.findUniqueOrThrow({ where: { id: orderId }, select: { number: true } });
+    for (const i of items) {
+      const v = await tx.variant.update({ where: { id: i.variantId }, data: { stock: { increment: i.quantity } }, select: { stock: true } });
+      await recordMovement(tx, {
+        variantId: i.variantId,
+        type: "CANCELAMENTO",
+        delta: i.quantity,
+        stockAfter: v.stock,
+        orderId,
+        note: `Pedido #${order.number}: ${reason}`.slice(0, 200),
+        actor: { email: actor },
+      });
+    }
     const redemption = await tx.couponRedemption.findUnique({ where: { orderId } });
     if (redemption) {
       await tx.couponRedemption.delete({ where: { orderId } });

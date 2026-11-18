@@ -17,6 +17,7 @@ export const ADMIN_NAV: { href: string; label: string; admin?: boolean; group: s
   { href: "/admin/pedidos", label: "Pedidos", admin: true, group: "Vendas" },
   { href: "/admin/cupons", label: "Cupons", admin: true, group: "Vendas" },
   { href: "/admin/produtos", label: "Produtos", group: "Catálogo" },
+  { href: "/admin/estoque", label: "Estoque", group: "Catálogo" },
   { href: "/admin/conteudo", label: "Home e coleções", group: "Conteúdo" },
   { href: "/admin/regras", label: "Desconto e frete", admin: true, group: "Loja" },
   { href: "/admin/newsletter", label: "Newsletter", admin: true, group: "Loja" },

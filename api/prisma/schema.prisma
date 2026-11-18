@@ -252,6 +252,7 @@ model Variant {
   color      Color       @relation(fields: [colorId], references: [id], onDelete: Restrict)
   cartItems  CartItem[]
   orderItems OrderItem[]
+  movements  StockMovement[]
 
   @@unique([productId, colorId, size])
   @@index([productId])
@@ -585,4 +586,43 @@ model LoginAttempt {
   @@index([email, createdAt])
   @@index([ip, createdAt])
   @@map("login_attempts")
+}
+
+// ───────────────────────────── Estoque ─────────────────────────────
+
+enum StockMovementType {
+  /// Pedido criado (estoque reservado/baixado automaticamente).
+  VENDA
+  /// Pedido cancelado ou expirado (estoque devolvido automaticamente).
+  CANCELAMENTO
+  /// Chegada de mercadoria.
+  ENTRADA
+  /// Perda, avaria, brinde, uso interno.
+  SAIDA
+  /// Correção de contagem (inventário).
+  AJUSTE
+  /// Devolução de cliente que volta para venda.
+  DEVOLUCAO
+}
+
+/// Histórico de movimentações: cada mudança de estoque de uma variante, com motivo e autor.
+model StockMovement {
+  id         String            @id @default(uuid()) @db.Uuid
+  variantId  String            @db.Uuid
+  type       StockMovementType
+  /// Quantidade que entrou (+) ou saiu (−).
+  delta      Int
+  /// Estoque da variante logo depois da movimentação.
+  stockAfter Int
+  note       String?
+  orderId    String?           @db.Uuid
+  actorId    String?           @db.Uuid
+  actorEmail String?
+  createdAt  DateTime          @default(now())
+  variant    Variant           @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@index([variantId, createdAt])
+  @@index([createdAt])
+  @@index([orderId])
+  @@map("stock_movements")
 }

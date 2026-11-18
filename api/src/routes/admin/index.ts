@@ -4,6 +4,7 @@ import { registerAdminIdempotency } from "../../lib/adminIdempotency";
 import { adminCatalogRoutes } from "./catalog";
 import { adminOperationsRoutes } from "./operations";
 import { adminSystemRoutes } from "./system";
+import { adminStockRoutes } from "./stock";
 
 declare module "fastify" {
   interface FastifyContextConfig {
@@ -35,5 +36,6 @@ export async function adminRoutes(app: FastifyInstance) {
   });
   await app.register(adminSystemRoutes);
   await app.register(adminCatalogRoutes);
+  await app.register(adminStockRoutes);
   await app.register(adminOperationsRoutes);
 }

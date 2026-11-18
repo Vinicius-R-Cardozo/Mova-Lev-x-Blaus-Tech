@@ -21,6 +21,7 @@ import { withIdempotency } from "../../lib/idempotency";
 import { revalidateStore } from "../../lib/revalidate";
 import { audit, diffSummary } from "../../lib/audit";
 import { lowStockThreshold } from "../../lib/settings";
+import { recordMovement } from "../../lib/stock";
 
 const PRODUCT_LABELS = { name: "Nome", slug: "URL", status: "Status", priceCents: "Preço", badge: "Selo", collectionId: "Coleção" };
 
@@ -218,16 +219,25 @@ export async function adminCatalogRoutes(app: FastifyInstance) {
   app.put<{ Params: { id: string } }>("/admin/products/:id/variants", { config: { allow: "staff" } }, async (req, reply) => {
     const productId = id.parse(req.params.id);
     const { variants } = adminVariantsSchema.parse(req.body);
-    const product = await prisma.product.findUnique({ where: { id: productId }, select: { name: true, variants: { select: { colorId: true, size: true, sku: true, stock: true, priceCents: true } } } });
+    const product = await prisma.product.findUnique({ where: { id: productId }, select: { name: true, variants: { select: { id: true, colorId: true, size: true, sku: true, stock: true, priceCents: true } } } });
     if (!product) return notFound(reply);
     try {
       await prisma.$transaction(async (tx) => {
+        const actor = { id: req.user!.id, email: req.user!.email };
         for (const v of variants) {
-          await tx.variant.upsert({
-            where: { productId_colorId_size: { productId, colorId: v.colorId, size: v.size } },
-            create: { productId, ...v },
-            update: { sku: v.sku, stock: v.stock, priceCents: v.priceCents },
-          });
+          const old = product.variants.find((o) => o.colorId === v.colorId && o.size === v.size);
+          if (!old) {
+            const created = await tx.variant.create({ data: { productId, ...v } });
+            await recordMovement(tx, { variantId: created.id, type: "ENTRADA", delta: v.stock, stockAfter: v.stock, note: "Estoque inicial (tela do produto)", actor });
+            continue;
+          }
+          await tx.variant.update({ where: { id: old.id }, data: { sku: v.sku, priceCents: v.priceCents } });
+          if (old.stock !== v.stock) {
+            // Só grava se ninguém vendeu no meio (senão a venda seria apagada).
+            const r = await tx.variant.updateMany({ where: { id: old.id, stock: old.stock }, data: { stock: v.stock } });
+            if (r.count === 0) throw Object.assign(new Error(`O estoque de ${v.sku} mudou enquanto você editava (provavelmente uma venda). Recarregue e ajuste de novo.`), { statusCode: 409, code: "estoque_mudou" });
+            await recordMovement(tx, { variantId: old.id, type: "AJUSTE", delta: v.stock - old.stock, stockAfter: v.stock, note: "Ajuste na tela do produto", actor });
+          }
         }
       });
     } catch (err) {
