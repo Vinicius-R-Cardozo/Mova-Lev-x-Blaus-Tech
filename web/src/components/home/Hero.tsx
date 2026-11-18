@@ -60,7 +60,7 @@ export function Hero({ hero, campaign }: { hero: HomeDTO["hero"]; campaign: Home
 
       <div className="container-site relative flex h-full flex-col justify-end pb-8 md:pb-[68px]">
         <p className="enter label text-[11px] tracking-[0.32em] md:text-label">{hero.kicker}</p>
-        <h1 id="hero-titulo" className="enter mt-4 text-hero-m md:mt-8 md:text-hero" style={cascade(1)}>
+        <h1 id="hero-titulo" className="enter-rise mt-4 text-hero-m md:mt-8 md:text-hero" style={cascade(1)}>
           {hero.titleLine1} <br className="hidden md:block" />
           <em>{hero.titleLine2}</em>
         </h1>

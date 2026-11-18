@@ -120,6 +120,19 @@
   animation: enter-up var(--motion-slow) var(--ease-out) both;
   animation-delay: calc(var(--i, 0) * var(--motion-stagger));
 }
+/*
+ * Para o elemento do LCP (título do hero): só sobe, sem começar transparente —
+ * o Chrome ignora como LCP o que pinta com opacity 0 e a nota cai.
+ */
+@keyframes rise {
+  from {
+    transform: translate3d(0, var(--motion-distance), 0);
+  }
+}
+.enter-rise {
+  animation: rise var(--motion-slow) var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * var(--motion-stagger));
+}
 
 /* Troca de conteúdo no mesmo lugar (aba, cor, preço, quantidade): fade curto. */
 @keyframes fade-in {
