@@ -1,4 +1,4 @@
-import type { CategoryDTO, CategoryPageDTO, HomeDTO, ProductCardDTO, ProductDetailDTO, StoreConfigDTO } from "@movalev/shared";
+import type { CategoryDTO, CategoryPageDTO, HomeDTO, PageDTO, ProductCardDTO, ProductDetailDTO, SiteContent, StoreConfigDTO } from "@movalev/shared";
 import { API_URL } from "./site";
 
 /** No servidor (SSR) pode usar uma URL interna; no navegador, a pública. */
@@ -36,7 +36,11 @@ export const api = {
   search: (q: string) => get<{ query: string; items: ProductCardDTO[] }>(`/catalog/search?q=${encodeURIComponent(q)}`, { cache: "no-store" }),
   /** Dados da loja e formas de pagamento (Configurações do painel). */
   store: () => get<StoreConfigDTO>("/catalog/store", { next: { revalidate: REVALIDATE, tags: ["store"] } }),
-  slugs: () => get<{ products: { slug: string; updatedAt: string }[]; categories: string[] }>("/catalog/slugs", { next: { revalidate: 600 } }),
+  /** Barra de aviso, menu, vantagens e rodapé (Conteúdo do painel). */
+  site: () => get<SiteContent>("/catalog/site", { next: { revalidate: REVALIDATE, tags: ["store"] } }),
+  /** Página de texto (Sobre, Trocas, Termos…). */
+  page: (slug: string) => get<PageDTO>(`/catalog/pages/${encodeURIComponent(slug)}`, { next: { revalidate: REVALIDATE, tags: ["pages"] } }),
+  slugs: () => get<{ products: { slug: string; updatedAt: string }[]; categories: string[]; pages?: { slug: string; system: boolean; updatedAt: string }[] }>("/catalog/slugs", { next: { revalidate: 600 } }),
 };
 
 /** POST com chave de idempotência (newsletter, pedido...). */

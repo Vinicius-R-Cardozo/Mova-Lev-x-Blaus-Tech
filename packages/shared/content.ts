@@ -108,3 +108,133 @@ export const pricingPaymentsOf = (p: PaymentSettings) => ({
   minInstallmentCents: p.minInstallmentCents,
   pixDiscountPercent: p.pixEnabled ? p.pixDiscountPercent : 0,
 });
+
+// ───────────────────────────── Conteúdo do site ─────────────────────────────
+
+const href = z
+  .string()
+  .trim()
+  .max(300)
+  .refine((v) => /^(\/(?!\/)|#|https?:\/\/|mailto:|tel:)/.test(v), "Use um caminho da loja (/…) ou um link https://");
+const linkSchema = z.object({ label: z.string().trim().min(1, "Texto obrigatório").max(60), href });
+
+export const BENEFIT_ICONS = ["truck", "exchange", "card", "shield"] as const;
+
+/** Barra de aviso, menu do topo, faixa de vantagens e rodapé. Padrões = o site atual. */
+export const siteContentSchema = z.object({
+  announcement: z
+    .object({
+      enabled: z.boolean().default(false),
+      text: z.string().trim().max(140).default("Frete grátis acima de R$ 299 · Troca grátis em 30 dias · 10% na 1ª compra"),
+      href: href.or(z.literal("")).default(""),
+    })
+    .prefault({}),
+  nav: z
+    .array(linkSchema)
+    .max(5)
+    .default([
+      { label: "Quiz do ajuste", href: "/guia-de-tamanhos" },
+      { label: "Clube MOVA", href: "/conta" },
+      { label: "Aulas abertas", href: "/#studio" },
+    ]),
+  benefits: z
+    .array(z.object({ icon: z.enum(BENEFIT_ICONS), title: z.string().trim().min(1).max(40), text: z.string().trim().max(60) }))
+    .max(4)
+    .default([
+      { icon: "truck", title: "Frete grátis", text: "acima de R$ 299" },
+      { icon: "exchange", title: "Troca grátis", text: "em até 30 dias" },
+      { icon: "card", title: "{{parcelas}}x sem juros", text: "ou {{pix_desconto}}% off no Pix" },
+      { icon: "shield", title: "Compra segura", text: "dados protegidos" },
+    ]),
+  footer: z
+    .object({
+      newsletterTitle: z.string().trim().max(120).default("Receba novidades e 10% na 1ª compra"),
+      columns: z
+        .array(z.object({ title: z.string().trim().min(1).max(40), links: z.array(linkSchema).max(8) }))
+        .max(4)
+        .default([
+          { title: "Loja", links: [{ label: "Novidades", href: "/colecao/novidades" }, { label: "Leggings", href: "/colecao/leggings" }, { label: "Tops", href: "/colecao/tops" }, { label: "Conjuntos", href: "/colecao/conjuntos" }] },
+          { title: "Ajuda", links: [{ label: "Trocas e devoluções", href: "/trocas-e-devolucoes" }, { label: "Guia de tamanhos", href: "/guia-de-tamanhos" }, { label: "Entregas", href: "/trocas-e-devolucoes#entregas" }, { label: "Contato", href: "/contato" }] },
+          { title: "Marca", links: [{ label: "Manifesto", href: "/sobre" }, { label: "Studio MOVA", href: "/#studio" }, { label: "Instagram", href: "https://instagram.com/movalev" }] },
+        ]),
+      bottomNote: z.string().trim().max(120).default("Pix · Cartão em até {{parcelas}}x · Boleto"),
+    })
+    .prefault({}),
+});
+export type SiteContent = z.infer<typeof siteContentSchema>;
+export const DEFAULT_SITE_CONTENT: SiteContent = siteContentSchema.parse({});
+
+/** Páginas de texto (Markdown). */
+export const pageInputSchema = z.object({
+  slug: z.string().trim().regex(/^[a-z0-9-]+$/, "Só letras minúsculas, números e hífen").min(2).max(60),
+  title: z.string().trim().min(2, "Título obrigatório").max(80),
+  emphasis: z.string().trim().max(60).nullable().optional(),
+  kicker: z.string().trim().max(40).nullable().optional(),
+  intro: z.string().trim().max(400).nullable().optional(),
+  body: z.string().max(60_000, "Texto longo demais"),
+  seoTitle: z.string().trim().max(70).nullable().optional(),
+  seoDescription: z.string().trim().max(160).nullable().optional(),
+  showToc: z.boolean().default(false),
+  published: z.boolean().default(true),
+});
+export type PageInput = z.infer<typeof pageInputSchema>;
+
+export interface PageDTO extends PageInput {
+  id: string;
+  system: boolean;
+  updatedAt: string;
+}
+
+/** Marcadores que o texto das páginas aceita (trocados pelos dados das Configurações). */
+export const CONTENT_PLACEHOLDERS: { key: string; label: string }[] = [
+  { key: "razao_social", label: "Razão social" },
+  { key: "cnpj", label: "CNPJ" },
+  { key: "endereco", label: "Endereço" },
+  { key: "email", label: "E-mail de atendimento" },
+  { key: "email_dpo", label: "E-mail do encarregado (DPO)" },
+  { key: "whatsapp", label: "WhatsApp" },
+  { key: "horario", label: "Horário de atendimento" },
+  { key: "instagram", label: "Link do Instagram" },
+  { key: "pix_desconto", label: "Desconto do Pix (%)" },
+  { key: "parcelas", label: "Parcelas sem juros" },
+];
+/** Componentes que podem entrar no texto (uma linha sozinha). */
+export const CONTENT_WIDGETS: { key: string; label: string }[] = [
+  { key: "formulario-contato", label: "Formulário de contato" },
+  { key: "preferencias-cookies", label: "Link de preferências de cookies" },
+];
+
+/**
+ * Troca {{marcador}} pelos valores; marcador sem valor vira "[a preencher: …]".
+ * {{marcador?}} é opcional: se estiver vazio, a LINHA inteira some (ex.: WhatsApp).
+ */
+export function fillPlaceholders(text: string, values: Record<string, string>): string {
+  const optional = /\{\{\s*([a-z_]+)\?\s*\}\}/g;
+  text = text
+    .split("\n")
+    .filter((line) => [...line.matchAll(optional)].every((m) => (values[m[1]!] ?? "").trim()))
+    .join("\n")
+    .replace(/\{\{\s*([a-z_]+)\?\s*\}\}/g, (_m, key: string) => values[key] ?? "");
+  return text.replace(/\{\{\s*([a-z_]+)\s*\}\}/g, (_m, key: string) => {
+    const v = values[key];
+    if (v && v.trim()) return v;
+    const label = CONTENT_PLACEHOLDERS.find((p) => p.key === key)?.label ?? key;
+    return `[a preencher: ${label.toLowerCase()}]`;
+  });
+}
+
+/** Valores dos marcadores a partir das Configurações. */
+export function placeholderValues(store: StoreSettings, payments: PaymentSettings): Record<string, string> {
+  return {
+    razao_social: store.legalName,
+    cnpj: store.cnpj,
+    endereco: store.address,
+    email: store.contactEmail,
+    email_dpo: store.dpoEmail,
+    whatsapp: store.whatsapp,
+    horario: store.hours,
+    instagram: store.instagram,
+    pix_desconto: String(payments.pixEnabled ? payments.pixDiscountPercent : 0),
+    parcelas: String(payments.cardEnabled ? payments.maxInstallments : 1),
+  };
+}

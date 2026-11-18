@@ -640,3 +640,29 @@ model StockMovement {
   @@index([orderId])
   @@map("stock_movements")
 }
+
+// ───────────────────────────── Conteúdo ─────────────────────────────
+
+/// Páginas de texto editáveis no painel (Sobre, Trocas, Privacidade, Termos, Guia, Contato e novas).
+model Page {
+  id             String   @id @default(uuid()) @db.Uuid
+  slug           String   @unique
+  /// Título (1ª parte) e complemento em itálico ("Política de" + "privacidade").
+  title          String
+  emphasis       String?
+  kicker         String?
+  intro          String?
+  /// Texto em Markdown, com marcadores {{cnpj}}, {{email}}… e componentes [[formulario-contato]].
+  body           String
+  seoTitle       String?
+  seoDescription String?
+  showToc        Boolean  @default(false)
+  published      Boolean  @default(true)
+  /// Páginas da loja (endereço fixo, não podem ser excluídas).
+  system         Boolean  @default(false)
+  updatedBy      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("pages")
+}

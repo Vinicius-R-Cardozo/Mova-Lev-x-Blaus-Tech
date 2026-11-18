@@ -20,7 +20,7 @@ type Entry = {
 };
 type Page = { total: number; page: number; perPage: number; items: Entry[]; entities: string[] };
 
-const ENTITY_LABEL: Record<string, string> = { produto: "Produtos", pedido: "Pedidos", cupom: "Cupons", colecao: "Coleções", conteudo: "Conteúdo", configuracao: "Configurações", usuario: "Usuários", estoque: "Estoque", categoria: "Categorias" };
+const ENTITY_LABEL: Record<string, string> = { produto: "Produtos", pedido: "Pedidos", cupom: "Cupons", colecao: "Coleções", conteudo: "Conteúdo", configuracao: "Configurações", usuario: "Usuários", estoque: "Estoque", categoria: "Categorias", pagina: "Páginas" };
 const fmt = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" });
 
 /** Registro de atividades: quem alterou o quê e quando (preço, estoque, exclusões, status…). */

@@ -10,12 +10,10 @@ import { useCart } from "@/lib/cart";
 import { useFocusTrap } from "@/lib/useFocusTrap";
 import { cn } from "@/lib/cn";
 
-/** Navegação principal. `match` decide qual item fica ativo. */
-const NAV = [
-  { label: "Quiz do ajuste", href: "/guia-de-tamanhos", match: (p: string) => p.startsWith("/guia-de-tamanhos") },
-  { label: "Clube MOVA", href: "/conta", match: (p: string) => p.startsWith("/conta") },
-  { label: "Aulas abertas", href: "/#studio", match: () => false },
-] as const;
+export type NavLink = { label: string; href: string };
+/** Item do menu fica ativo quando a página atual está dentro do caminho dele (âncoras não contam). */
+const isActive = (href: string, p: string) => href.startsWith("/") && !href.includes("#") && href !== "/" && (p === href.split("?")[0] || p.startsWith(`${href.split("?")[0]}/`));
+const isExternal = (href: string) => /^https?:/i.test(href);
 const isStore = (p: string) => p === "/" || /^\/(colecao|produto|busca)(\/|$)/.test(p);
 
 /**
@@ -24,7 +22,7 @@ const isStore = (p: string) => p === "/" || /^\/(colecao|produto|busca)(\/|$)/.t
  * categorias); à direita busca, Entrar e Sacola com contador quadrado verde-oliva.
  * Abaixo de `lg`: hambúrguer + marca + Sacola.
  */
-export function Header({ categories }: { categories: CategoryDTO[] }) {
+export function Header({ categories, nav }: { categories: CategoryDTO[]; nav: NavLink[] }) {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -69,12 +67,13 @@ export function Header({ categories }: { categories: CategoryDTO[] }) {
                 <li>
                   <StoreMenu categories={menu} active={isStore(pathname)} pathname={pathname} />
                 </li>
-                {NAV.map((item) => {
-                  const active = item.match(pathname);
+                {nav.map((item) => {
+                  const active = isActive(item.href, pathname);
                   return (
-                    <li key={item.label}>
+                    <li key={`${item.label}-${item.href}`}>
                       <Link
                         href={item.href}
+                        {...(isExternal(item.href) ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                         aria-current={active ? "page" : undefined}
                         className={cn("label-sm xl:label edit-link inline-flex min-h-touch items-center", active && "edit-link-active")}
                       >
@@ -112,7 +111,7 @@ export function Header({ categories }: { categories: CategoryDTO[] }) {
           </div>
         </div>
       </header>
-      {menuMounted && <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} categories={categories} />}
+      {menuMounted && <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} categories={categories} nav={nav} />}
     </>
   );
 }
@@ -238,7 +237,7 @@ function BagCount({ count, ready }: { count: number; ready: boolean }) {
   );
 }
 
-function MobileMenu({ open, onClose, categories }: { open: boolean; onClose: () => void; categories: CategoryDTO[] }) {
+function MobileMenu({ open, onClose, categories, nav }: { open: boolean; onClose: () => void; categories: CategoryDTO[]; nav: NavLink[] }) {
   const ref = useRef<HTMLDivElement>(null);
   const close = useCallback(() => onClose(), [onClose]);
   useFocusTrap(ref, open, close);
@@ -310,15 +309,13 @@ function MobileMenu({ open, onClose, categories }: { open: boolean; onClose: () 
             })}
           </ul>
           <ul className="mt-6 space-y-1">
-            <li>
-              <Link href="/guia-de-tamanhos" className="flex h-11 items-center gap-3 text-body-sm">Quiz do ajuste</Link>
-            </li>
-            <li>
-              <Link href="/conta" className="flex h-11 items-center gap-3 text-body-sm">Clube MOVA</Link>
-            </li>
-            <li>
-              <Link href="/#studio" className="flex h-11 items-center gap-3 text-body-sm">Aulas abertas</Link>
-            </li>
+            {nav.map((item) => (
+              <li key={`${item.label}-${item.href}`}>
+                <Link href={item.href} {...(isExternal(item.href) ? { target: "_blank", rel: "noopener noreferrer" } : {})} className="flex h-11 items-center gap-3 text-body-sm">
+                  {item.label}
+                </Link>
+              </li>
+            ))}
             <li>
               <Link href="/busca" className="flex h-11 items-center gap-3 text-body-sm"><SearchIcon width={18} height={18} /> Buscar</Link>
             </li>

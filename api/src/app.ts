@@ -14,6 +14,7 @@ import { paymentRoutes } from "./routes/payments";
 import { adminRoutes } from "./routes/admin";
 import { adminAuthRoutes } from "./routes/adminAuth";
 import { contactRoutes } from "./routes/contact";
+import { contentRoutes } from "./routes/content";
 
 const LOCALHOST = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 
@@ -69,6 +70,7 @@ export async function buildApp() {
   await app.register(adminAuthRoutes);
   await app.register(adminRoutes);
   await app.register(contactRoutes);
+  await app.register(contentRoutes);
 
   return app;
 }

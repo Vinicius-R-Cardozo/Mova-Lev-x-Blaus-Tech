@@ -318,11 +318,12 @@ export async function catalogRoutes(app: FastifyInstance) {
 
   // ── Sitemap: slugs públicos ──
   app.get("/catalog/slugs", async (_req, reply) => {
-    const [products, categories] = await Promise.all([
+    const [products, categories, pages] = await Promise.all([
       prisma.product.findMany({ where: { status: "ACTIVE" }, select: { slug: true, updatedAt: true } }),
       prisma.category.findMany({ where: { archivedAt: null }, select: { slug: true } }),
+      prisma.page.findMany({ where: { published: true }, select: { slug: true, system: true, updatedAt: true } }),
     ]);
     cache(reply, 600);
-    return { products, categories: [NOVIDADES.slug, ...categories.map((c) => c.slug)] };
+    return { products, categories: [NOVIDADES.slug, ...categories.map((c) => c.slug)], pages };
   });
 }

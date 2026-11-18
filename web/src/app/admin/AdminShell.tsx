@@ -22,6 +22,8 @@ export const ADMIN_NAV: { href: string; label: string; admin?: boolean; group: s
   { href: "/admin/categorias", label: "Categorias", group: "Catálogo" },
   { href: "/admin/colecoes", label: "Coleções", group: "Catálogo" },
   { href: "/admin/conteudo", label: "Home", group: "Conteúdo" },
+  { href: "/admin/paginas", label: "Páginas", group: "Conteúdo" },
+  { href: "/admin/site", label: "Topo, menu e rodapé", group: "Conteúdo" },
   { href: "/admin/configuracoes/loja", label: "Dados da loja", admin: true, group: "Configurações" },
   { href: "/admin/configuracoes/pagamentos", label: "Pagamentos", admin: true, group: "Configurações" },
   { href: "/admin/regras", label: "Frete e desconto", admin: true, group: "Configurações" },
