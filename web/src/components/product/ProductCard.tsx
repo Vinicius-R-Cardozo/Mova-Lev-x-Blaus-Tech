@@ -165,7 +165,7 @@ function QuickAdd({ product }: { product: ProductCardDTO }) {
             onClick={() => setOpen(true)}
             disabled={soldOut}
             aria-expanded={false}
-            className="label-sm hidden h-12 w-full items-center justify-center gap-2 bg-offwhite/95 text-preto transition-colors hover:bg-offwhite disabled:opacity-60 md:flex"
+            className="card-quick label-sm hidden h-12 w-full items-center justify-center gap-2 bg-offwhite/95 text-preto hover:bg-offwhite disabled:opacity-60 md:flex"
           >
             {soldOut ? "Esgotado" : "+ Compra rápida"}
           </button>

@@ -29,7 +29,7 @@ export function Gallery({ images, tone, pictogram, name }: { images: ImageDTO[];
         pictogram={pictogram}
         detail={img.kind === "DETALHE"}
         label={IMAGE_KIND_LABEL[img.kind]}
-        className="aspect-[3/4]"
+        className="hero-settle aspect-[3/4]"
         pictogramClassName={img.kind === "DETALHE" ? "h-[62%] w-auto" : "h-[50%] w-auto"}
         sizes="(min-width: 1024px) 29vw, 100vw"
         priority={priority && i === 0}
@@ -40,14 +40,14 @@ export function Gallery({ images, tone, pictogram, name }: { images: ImageDTO[];
     <section aria-label={`Fotos de ${name}`}>
       <ul className="hidden grid-cols-2 gap-2 lg:grid">
         {images.map((img, i) => (
-          <li key={img.id}>{render(img, i, true)}</li>
+          <li key={img.id} className="overflow-hidden">{render(img, i, true)}</li>
         ))}
       </ul>
 
       <div className="-mx-4 lg:hidden">
         <ul ref={trackRef} onScroll={onScroll} className="flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {images.map((img, i) => (
-            <li key={img.id} className="w-full shrink-0 snap-center" aria-label={`Foto ${i + 1} de ${images.length}`}>
+            <li key={img.id} className="w-full shrink-0 snap-center overflow-hidden" aria-label={`Foto ${i + 1} de ${images.length}`}>
               {render(img, i, true)}
             </li>
           ))}

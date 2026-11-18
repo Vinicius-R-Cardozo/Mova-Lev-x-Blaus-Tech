@@ -19,9 +19,14 @@ export function RevealObserver() {
     if (!("IntersectionObserver" in window)) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
+    const slow = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--motion-slow"), 10) || 750;
     const reveal = (el: Element, delay = 0) => {
       const h = el as HTMLElement;
-      if (delay) h.style.setProperty("--reveal-delay", `${delay}ms`);
+      if (delay) {
+        h.style.setProperty("--reveal-delay", `${delay}ms`);
+        // Depois da entrada, tira o atraso para o hover do card responder na hora.
+        window.setTimeout(() => h.style.removeProperty("--reveal-delay"), delay + slow);
+      }
       h.setAttribute("data-revealed", "");
     };
 

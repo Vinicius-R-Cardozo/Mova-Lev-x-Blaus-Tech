@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useId, useRef, useState } from "react";
+import { useId, useRef, useState, type CSSProperties } from "react";
 import {
   SENSATION_LABEL,
   formatBRL,
@@ -19,6 +19,9 @@ import { defaultSize } from "@/components/home/lookToCart";
 import { useCart } from "@/lib/cart";
 import { useFavorites } from "@/lib/favorites";
 import { cn } from "@/lib/cn";
+
+/** Posição na cascata de entrada (multiplica --motion-stagger). */
+const cascade = (i: number) => ({ "--i": i }) as CSSProperties;
 
 export function ProductView({ product, initialColor }: { product: ProductDetailDTO; initialColor: string }) {
   const router = useRouter();
@@ -83,8 +86,8 @@ export function ProductView({ product, initialColor }: { product: ProductDetailD
         </div>
 
         <div className="pb-8 lg:sticky lg:top-[108px] lg:self-start lg:pb-0">
-          <p className="label-sm text-texto-3">{kicker}</p>
-          <h1 className="mt-3 text-[40px] leading-[1.02] md:mt-4 md:text-h2">
+          <p className="enter label-sm text-texto-3">{kicker}</p>
+          <h1 className="enter-rise mt-3 text-[40px] leading-[1.02] md:mt-4 md:text-h2" style={cascade(1)}>
             {nameMain}
             {product.nameEmphasis && nameMain !== product.name && (
               <>
@@ -93,11 +96,11 @@ export function ProductView({ product, initialColor }: { product: ProductDetailD
               </>
             )}
           </h1>
-          <p className="mt-4 flex flex-wrap items-baseline gap-x-2">
+          <p className="enter mt-4 flex flex-wrap items-baseline gap-x-2" style={cascade(2)}>
             <span key={price} className={cn("text-[24px] font-normal", touched && "swap-in")}>{formatBRL(price, { compact: true })}</span>
             <span className="text-body-sm font-light text-texto-2">· {installmentLabel(price)} · 5% off no Pix</span>
           </p>
-          <p className="mt-3 text-body-sm font-light text-texto-2">
+          <p className="enter mt-3 text-body-sm font-light text-texto-2" style={cascade(3)}>
             {product.rating ? (
               <a href="#avaliacoes" className="link-underline">
                 {product.rating.average.toLocaleString("pt-BR", { minimumFractionDigits: 1 })} · {product.rating.count} avaliações
@@ -108,7 +111,7 @@ export function ProductView({ product, initialColor }: { product: ProductDetailD
           </p>
 
           {/* Cor */}
-          <fieldset className="mt-8">
+          <fieldset className="enter mt-8" style={cascade(4)}>
             <legend className="text-body-sm">
               Cor: <span className="font-normal">{color.name}</span>
             </legend>
@@ -132,7 +135,7 @@ export function ProductView({ product, initialColor }: { product: ProductDetailD
           </fieldset>
 
           {/* Tamanho */}
-          <fieldset className="mt-8" aria-describedby={showSizeError && !size ? errorId : undefined}>
+          <fieldset className="enter mt-8" style={cascade(5)} aria-describedby={showSizeError && !size ? errorId : undefined}>
             <div className="flex items-baseline justify-between">
               <legend className="text-body-sm">
                 Tamanho{size && <>: <span className="font-normal">{size.size}</span></>}
@@ -171,7 +174,7 @@ export function ProductView({ product, initialColor }: { product: ProductDetailD
             )}
           </fieldset>
 
-          <div className="mt-7 flex gap-3">
+          <div className="enter mt-7 flex gap-3" style={cascade(6)}>
             <button type="button" onClick={addToBag} disabled={soldOut} className="btn-primary h-[60px] flex-1">
               {soldOut ? "Esgotado nesta cor" : "Adicionar à sacola"}
             </button>

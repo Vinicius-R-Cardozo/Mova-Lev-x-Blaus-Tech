@@ -22,7 +22,7 @@ export function Studio({ studio }: { studio: HomeDTO["studio"] }) {
           {studio.classes.map((c) => (
             <li key={c.title} data-reveal>
               <a href={c.videoUrl ?? studio.cta.href} className="group block" aria-label={`${c.title}, ${c.meta}`}>
-                <span className="flex aspect-[3/4] items-center justify-center transition-transform duration-slow ease-out group-hover:scale-102" style={{ backgroundColor: c.tone }}>
+                <span className="flex aspect-[3/4] items-center justify-center transition-transform duration-slow ease-out group-hover:scale-[1.04]" style={{ backgroundColor: c.tone }}>
                   <PlayIcon width={28} height={28} className="text-offwhite" />
                 </span>
                 <span className="mt-4 block text-[16px] font-normal">{c.title}</span>

@@ -38,7 +38,7 @@ export function Footer() {
     <footer className="border-t border-linha">
       <div className="container-site pt-16 md:pt-20">
         <div className="grid gap-12 lg:grid-cols-[minmax(0,640px)_1fr] lg:gap-12">
-          <div>
+          <div data-reveal>
             <h2 className="text-h3-sm md:text-[38px] md:leading-tight">
               Receba novidades e 10% na 1<sup className="text-[0.55em]">a</sup> compra
             </h2>
@@ -46,7 +46,7 @@ export function Footer() {
           </div>
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
             {columns.map((col) => (
-              <nav key={col.title} aria-label={col.title}>
+              <nav key={col.title} aria-label={col.title} data-reveal>
                 <h3 className="label-sm font-sans font-medium">{col.title}</h3>
                 <ul className="mt-2">
                   {col.links.map((l) => (
@@ -68,7 +68,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 text-areia md:mt-14">
+        <div data-reveal className="mt-12 text-areia md:mt-14">
           <BrandMark variant="completa" decorative className="block w-full" />
         </div>
 

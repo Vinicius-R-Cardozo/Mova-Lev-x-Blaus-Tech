@@ -14,7 +14,7 @@ const cascade = (i: number) => ({ "--i": i }) as CSSProperties;
 /** Silhueta e linhas da campanha enquanto o vídeo não chega. */
 function HeroArt() {
   return (
-    <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg,#A99A8A 0%,#CDBBA6 24%,#C3AF99 50%,#8F806F 76%,#4E453C 100%)" }}>
+    <div aria-hidden className="hero-settle absolute inset-0" style={{ background: "linear-gradient(180deg,#A99A8A 0%,#CDBBA6 24%,#C3AF99 50%,#8F806F 76%,#4E453C 100%)" }}>
       <div className="absolute left-[51%] top-[19%] h-[73%] w-[24%] rounded-[50%] bg-[#D2BEA9]/60 md:left-[50.5%]" />
       <div className="absolute left-[58.5%] top-[14%] aspect-square w-[8.6%] rounded-full bg-[#C4A898]/70" />
       <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1440 920" preserveAspectRatio="none" fill="none">
@@ -43,7 +43,7 @@ export function Hero({ hero, campaign }: { hero: HomeDTO["hero"]; campaign: Home
     <section aria-labelledby="hero-titulo" className="relative h-hero-m overflow-hidden text-offwhite on-dark md:h-hero">
       {hero.videoUrl ? (
         <video
-          className="absolute inset-0 h-full w-full object-cover"
+          className="hero-settle absolute inset-0 h-full w-full object-cover"
           src={hero.videoUrl}
           poster={hero.posterUrl ?? undefined}
           autoPlay={!reduceMotion}
@@ -56,15 +56,16 @@ export function Hero({ hero, campaign }: { hero: HomeDTO["hero"]; campaign: Home
         <HeroArt />
       )}
       <div aria-hidden className="absolute inset-x-0 bottom-0 h-[78%] bg-gradient-to-t from-black/60 via-black/25 to-transparent" />
-      {!hero.videoUrl && <p className="label-sm absolute right-gutter top-[124px] hidden text-preto/80 md:block">{hero.caption}</p>}
+      {!hero.videoUrl && <p className="enter label-sm absolute right-gutter top-[124px] hidden text-preto/80 md:block" style={cascade(5)}>{hero.caption}</p>}
 
       <div className="container-site relative flex h-full flex-col justify-end pb-8 md:pb-[68px]">
         <p className="enter label text-[11px] tracking-[0.32em] md:text-label">{hero.kicker}</p>
-        <h1 id="hero-titulo" className="enter-rise mt-4 text-hero-m md:mt-8 md:text-hero" style={cascade(1)}>
-          {hero.titleLine1} <br className="hidden md:block" />
-          <em>{hero.titleLine2}</em>
+        <h1 id="hero-titulo" className="mt-4 text-hero-m md:mt-8 md:text-hero">
+          {/* Cada linha sobe na sua vez (só transform: o título é o LCP). */}
+          <span className="enter-rise inline-block" style={cascade(1)}>{hero.titleLine1}</span> <br className="hidden md:block" />
+          <em className="enter-rise inline-block" style={cascade(2)}>{hero.titleLine2}</em>
         </h1>
-        <div className="enter mt-6 flex flex-wrap gap-3 md:mt-7" style={cascade(2)}>
+        <div className="enter mt-6 flex flex-wrap gap-3 md:mt-7" style={cascade(3)}>
           <Link href={hero.primaryCta.href} className="btn-light w-full md:w-auto md:px-10">
             {hero.primaryCta.label}
           </Link>

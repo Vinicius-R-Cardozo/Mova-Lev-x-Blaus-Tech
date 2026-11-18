@@ -10,9 +10,9 @@ const items = [
 export function Benefits() {
   return (
     <section aria-label="Vantagens" className="mt-20 border-y border-linha md:mt-[100px]">
-      <ul data-reveal className="container-site grid grid-cols-2 gap-y-6 py-7 md:grid-cols-4">
+      <ul className="container-site grid grid-cols-2 gap-y-6 py-7 md:grid-cols-4">
         {items.map(({ Icon, title, text }) => (
-          <li key={title} className="flex items-center gap-4">
+          <li key={title} data-reveal className="flex items-center gap-4">
             <Icon className="shrink-0 text-oliva" />
             <p className="text-[15px] leading-snug">
               <span className="block font-normal">{title}</span>
