@@ -41,7 +41,7 @@ export function Hero({ hero, campaign }: { hero: HomeDTO["hero"]; campaign: Home
   };
 
   return (
-    <section aria-labelledby="hero-titulo" className="relative h-[clamp(520px,calc(100svh-102px),700px)] overflow-hidden text-offwhite on-dark md:h-[clamp(600px,calc(100svh-122px),920px)]">
+    <section aria-labelledby="hero-titulo" className="relative h-[clamp(520px,calc(100svh-64px),700px)] overflow-hidden text-offwhite on-dark md:h-[clamp(600px,calc(100svh-84px),920px)]">
       {hero.videoUrl ? (
         <video
           className="hero-settle absolute inset-0 h-full w-full object-cover"

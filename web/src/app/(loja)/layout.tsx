@@ -1,5 +1,4 @@
 import type { CategoryDTO } from "@movalev/shared";
-import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { CartDrawerLazy } from "@/components/cart/CartDrawerLazy";
@@ -22,7 +21,6 @@ export default async function LojaLayout({ children }: { children: React.ReactNo
   const categories = await api.categories().catch(() => FALLBACK);
   return (
     <>
-      <AnnouncementBar />
       <Header categories={categories} />
       <main id="conteudo" tabIndex={-1} className="focus:outline-none">
         {children}

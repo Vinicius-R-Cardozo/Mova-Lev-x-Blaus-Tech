@@ -10,7 +10,7 @@ import { useCart } from "@/lib/cart";
 import { useFocusTrap } from "@/lib/useFocusTrap";
 import { cn } from "@/lib/cn";
 
-/** Navegação principal (pílula central). `match` decide qual item fica ativo. */
+/** Navegação principal. `match` decide qual item fica ativo. */
 const NAV = [
   { label: "Quiz do ajuste", href: "/guia-de-tamanhos", match: (p: string) => p.startsWith("/guia-de-tamanhos") },
   { label: "Clube MOVA", href: "/conta", match: (p: string) => p.startsWith("/conta") },
@@ -19,8 +19,10 @@ const NAV = [
 const isStore = (p: string) => p === "/" || /^\/(colecao|produto|busca)(\/|$)/.test(p);
 
 /**
- * Header: marca à esquerda, navegação em pílula no centro (Loja abre as categorias)
- * e Entrar + Sacola à direita. Abaixo de `lg`, vira hambúrguer + marca + Sacola.
+ * Header editorial: a linguagem da marca (cantos retos, rótulos Jost em caixa alta,
+ * marca centralizada). Navegação à esquerda com sublinhado que cresce (Loja abre as
+ * categorias); à direita busca, Entrar e Sacola com contador quadrado verde-oliva.
+ * Abaixo de `lg`: hambúrguer + marca + Sacola.
  */
 export function Header({ categories }: { categories: CategoryDTO[] }) {
   const pathname = usePathname();
@@ -49,9 +51,9 @@ export function Header({ categories }: { categories: CategoryDTO[] }) {
   return (
     <>
       <header className={cn("sticky top-0 z-header border-b bg-offwhite text-preto transition-colors duration-base", scrolled ? "border-linha" : "border-transparent")}>
-        <div className="mx-auto grid h-16 max-w-site grid-cols-[auto_1fr_auto] items-center gap-2 px-2 md:h-header md:px-gutter lg:grid-cols-[1fr_auto_1fr]">
-          {/* Esquerda: hambúrguer (até lg) + marca */}
-          <div className="flex items-center gap-1">
+        <div className="mx-auto grid h-16 max-w-site grid-cols-[1fr_auto_1fr] items-center px-2 md:h-header md:px-gutter">
+          {/* Esquerda: hambúrguer (até lg) / navegação (desktop) */}
+          <div className="flex items-center">
             <button
               type="button"
               className="flex h-11 w-11 items-center justify-center lg:hidden"
@@ -62,44 +64,49 @@ export function Header({ categories }: { categories: CategoryDTO[] }) {
             >
               <MenuIcon />
             </button>
-            <Link href="/" aria-label="MOVA LEV — página inicial" className="flex items-center">
-              <BrandMark variant="wordmark" decorative className="h-[18px] md:h-6" />
-            </Link>
+            <nav aria-label="Principal" className="hidden lg:block">
+              <ul className="flex items-center gap-6 xl:gap-8">
+                <li>
+                  <StoreMenu categories={menu} active={isStore(pathname)} pathname={pathname} />
+                </li>
+                {NAV.map((item) => {
+                  const active = item.match(pathname);
+                  return (
+                    <li key={item.label}>
+                      <Link
+                        href={item.href}
+                        aria-current={active ? "page" : undefined}
+                        className={cn("label-sm xl:label edit-link inline-flex min-h-touch items-center", active && "edit-link-active")}
+                      >
+                        {item.label}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
           </div>
 
-          {/* Centro: pílula de navegação (desktop) */}
-          <nav aria-label="Principal" className="hidden lg:block">
-            <ul className="flex items-center gap-1 rounded-full bg-white p-1.5 shadow-[0_1px_2px_rgba(26,26,26,0.04),0_0_0_1px_rgba(26,26,26,0.04)]">
-              <li>
-                <StoreMenu categories={menu} active={isStore(pathname)} pathname={pathname} />
-              </li>
-              {NAV.map((item) => {
-                const active = item.match(pathname);
-                return (
-                  <li key={item.label}>
-                    <Link href={item.href} aria-current={active ? "page" : undefined} className={cn("nav-pill", active && "nav-pill-active")}>
-                      {item.label}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
+          {/* Centro: marca */}
+          <Link href="/" aria-label="MOVA LEV — página inicial" className="flex justify-center">
+            <BrandMark variant="wordmark" decorative className="h-[18px] md:h-7" />
+          </Link>
 
           {/* Direita: busca, Entrar, Sacola */}
-          <div className="flex items-center justify-end gap-1 md:gap-2">
-            <Link href="/busca" aria-label="Buscar" className="press hidden h-11 w-11 items-center justify-center rounded-full hover:bg-bege md:flex">
+          <div className="flex items-center justify-end gap-1 md:gap-5">
+            <Link href="/busca" aria-label="Buscar" className="hidden h-11 w-11 items-center justify-center md:flex">
               <SearchIcon />
             </Link>
-            <Link href="/conta" className="press hidden h-11 items-center rounded-full px-4 text-[15px] font-normal hover:bg-bege md:inline-flex">
+            <Link href="/conta" className="label-sm xl:label edit-link hidden min-h-touch items-center md:inline-flex">
               {session ? "Minha conta" : "Entrar"}
             </Link>
             <button
               type="button"
               onClick={cart.open}
               aria-label={`Abrir sacola, ${count} ${count === 1 ? "peça" : "peças"}`}
-              className="press inline-flex h-11 items-center gap-1.5 rounded-full bg-areia px-5 text-[15px] font-normal hover:bg-taupe-claro md:h-12 md:px-6"
+              className="label-sm xl:label press inline-flex min-h-touch items-center gap-2.5 px-1"
             >
+              Sacola
               <BagCount count={count} ready={cart.ready} />
             </button>
           </div>
@@ -111,7 +118,7 @@ export function Header({ categories }: { categories: CategoryDTO[] }) {
 }
 
 /**
- * "Loja" na pílula: abre um painel com as categorias e os modelos de legging.
+ * "Loja": abre um painel com as categorias e os modelos de legging.
  * Clique ou teclado abrem/fecham; com mouse, abre ao passar por cima.
  */
 function StoreMenu({ categories, active, pathname }: { categories: CategoryDTO[]; active: boolean; pathname: string }) {
@@ -166,19 +173,19 @@ function StoreMenu({ categories, active, pathname }: { categories: CategoryDTO[]
             setOpen(true);
           } else setOpen((o) => !o);
         }}
-        className={cn("nav-pill gap-1.5", active && "nav-pill-active")}
+        className={cn("label-sm xl:label edit-link inline-flex min-h-touch items-center gap-1.5", active && "edit-link-active")}
       >
         Loja
         <ChevronDownIcon width={14} height={14} className={cn("transition-transform duration-base ease-out", open && "rotate-180")} />
       </button>
       <div id={panelId} className="store-panel" data-open={open}>
-        <div className="grid w-[520px] grid-cols-2 gap-8 rounded-[28px] bg-white p-7 shadow-resumo">
+        <div className="grid w-[520px] grid-cols-2 gap-8 bg-white p-7 shadow-resumo">
           <div>
             <p className="label-sm text-texto-2">Categorias</p>
             <ul className="mt-3 space-y-0.5">
               {categories.map((c) => (
                 <li key={c.slug}>
-                  <Link href={`/colecao/${c.slug}`} tabIndex={open ? 0 : -1} className="-mx-3 flex h-10 items-center rounded-full px-3 text-[15px] hover:bg-bege">
+                  <Link href={`/colecao/${c.slug}`} tabIndex={open ? 0 : -1} className="-mx-3 flex h-10 items-center px-3 text-[15px] hover:bg-bege">
                     {c.name}
                   </Link>
                 </li>
@@ -190,7 +197,7 @@ function StoreMenu({ categories, active, pathname }: { categories: CategoryDTO[]
             <ul className="mt-3 space-y-0.5">
               {MODELS.map((m) => (
                 <li key={m}>
-                  <Link href={`/colecao/leggings?modelo=${MODEL_SLUG[m]}`} tabIndex={open ? 0 : -1} className="-mx-3 flex h-10 items-center rounded-full px-3 text-[15px] hover:bg-bege">
+                  <Link href={`/colecao/leggings?modelo=${MODEL_SLUG[m]}`} tabIndex={open ? 0 : -1} className="-mx-3 flex h-10 items-center px-3 text-[15px] hover:bg-bege">
                     {MODEL_LABEL[m]}
                   </Link>
                 </li>
@@ -207,9 +214,9 @@ function StoreMenu({ categories, active, pathname }: { categories: CategoryDTO[]
 }
 
 /**
- * Contador da sacola ("Sacola · n"). Quando entra peça, a pílula dá um pulso
- * suave e o número novo sobe no lugar do antigo. Ao carregar a página e ao
- * remover peças, nada anima.
+ * Contador da sacola (quadrado verde-oliva). Quando entra peça, o quadrado dá um
+ * pulso e o número novo sobe no lugar do antigo. Ao carregar a página e ao remover
+ * peças, nada anima.
  */
 function BagCount({ count, ready }: { count: number; ready: boolean }) {
   const prev = useRef<number | null>(null);
@@ -221,11 +228,12 @@ function BagCount({ count, ready }: { count: number; ready: boolean }) {
   }, [count, ready]);
   const animate = bumpKey > 0;
   return (
-    <span key={`b-${bumpKey}`} className={cn("inline-flex items-center gap-1.5", animate && "bump-soft")} aria-hidden>
-      Sacola ·
-      <span key={`n-${bumpKey}`} className={cn("inline-block tabular-nums", animate && "swap-up")}>
-        {count}
-      </span>
+    <span
+      key={`b-${bumpKey}`}
+      aria-hidden
+      className={cn("inline-flex h-6 min-w-6 items-center justify-center overflow-hidden bg-oliva px-1.5 text-[11px] tracking-normal text-offwhite tabular-nums", animate && "bump")}
+    >
+      <span className={cn("inline-block", animate && "swap-up")}>{count}</span>
     </span>
   );
 }

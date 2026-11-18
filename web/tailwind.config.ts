@@ -60,7 +60,6 @@ const config: Config = {
       spacing: {
         gutter: "40px",
         header: "84px",
-        announce: "38px",
       },
       maxWidth: { site: "1440px" },
       height: { hero: "920px", "hero-m": "700px", btn: "56px" },
