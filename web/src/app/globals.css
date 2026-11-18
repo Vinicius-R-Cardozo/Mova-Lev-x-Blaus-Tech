@@ -148,6 +148,31 @@
   animation-delay: calc(var(--i, 0) * var(--motion-stagger));
 }
 
+/*
+ * Transição entre páginas da loja: a atual esmaece e sobe um pouco ao clicar no
+ * link (NavTransition); a nova entra com fade + 24px (template da loja).
+ * Fill só "backwards": terminada a entrada, nada de transform fica no wrapper
+ * (barras fixas, como o CTA do produto no celular, voltam ao lugar certo).
+ */
+#conteudo > div {
+  transition:
+    opacity var(--motion-base) var(--ease-standard),
+    transform var(--motion-base) var(--ease-standard);
+}
+.page-leaving #conteudo > div {
+  opacity: 0.25;
+  transform: translate3d(0, -10px, 0);
+}
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 24px, 0);
+  }
+}
+.page-enter {
+  animation: page-in var(--motion-slow) var(--ease-out) backwards;
+}
+
 /* Troca de conteúdo no mesmo lugar (aba, cor, preço, quantidade): fade curto. */
 @keyframes fade-in {
   from {
@@ -340,8 +365,12 @@
     transform: none;
   }
   .heart[data-on="true"],
-  .hero-settle {
+  .hero-settle,
+  .page-enter {
     animation: none;
+  }
+  .page-leaving #conteudo > div {
+    transform: none;
   }
 }
 
