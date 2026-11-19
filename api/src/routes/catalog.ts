@@ -127,8 +127,6 @@ export async function catalogRoutes(app: FastifyInstance) {
           hotspot: content.shopTheLook.items.find((i) => i.productSlug === ref.productSlug)!.hotspot,
         })),
       },
-      sensations: content.sensations,
-      studio: content.studio,
       instagram: content.instagram,
     };
   });

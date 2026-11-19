@@ -129,7 +129,7 @@ export default function SitePage() {
         </Card>
 
         <Card title="Menu do topo">
-          <Hint>Links ao lado de “Loja” (que abre as categorias). Até 5. Use caminhos da loja (/conta, /pagina/…, /#studio) ou links https://.</Hint>
+          <Hint>Links ao lado de “Loja” (que abre as categorias). Até 5. Use caminhos da loja (/conta, /colecao/…, /pagina/…) ou links https://.</Hint>
           <LinkList idBase="nav" links={form.nav} max={5} errors={errors} errorPath="nav" onChange={(l) => set("nav", l)} addLabel="Adicionar link ao menu" />
         </Card>
 

@@ -5,8 +5,6 @@ import { CategoryShortcuts } from "@/components/home/CategoryShortcuts";
 import { NewArrivals } from "@/components/home/NewArrivals";
 import { Benefits } from "@/components/home/Benefits";
 import { ShopTheLook } from "@/components/home/ShopTheLook";
-import { Sensations } from "@/components/home/Sensations";
-import { Studio } from "@/components/home/Studio";
 import { InstagramGrid } from "@/components/home/InstagramGrid";
 
 // Renderizada por requisição (o build não depende da API); os dados ficam em cache por 60 s.
@@ -26,8 +24,6 @@ export default async function HomePage() {
       <NewArrivals newArrivals={home.newArrivals} bestSellers={home.bestSellers} />
       <Benefits />
       <ShopTheLook look={home.shopTheLook} />
-      <Sensations items={home.sensations} />
-      <Studio studio={home.studio} />
       <InstagramGrid instagram={home.instagram} />
     </>
   );

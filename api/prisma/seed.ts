@@ -372,22 +372,6 @@ const settings = {
       note: "Levando as 3 peças: 15% off aplicado na sacola.",
       cta: "Adicionar o look completo",
     },
-    sensations: [
-      { sensation: "NUVEM", title: "Toque Nuvem", text: "Maciez amanteigada para leggings, tops e moletons", href: "/colecao/leggings?sensacao=nuvem" },
-      { sensation: "BRISA", title: "Toque Brisa", text: "Frescor contínuo para os dias quentes", href: "/colecao/leggings?sensacao=brisa" },
-    ],
-    studio: {
-      kicker: "Studio MOVA",
-      title: "Aulas para",
-      titleEmphasis: "respirar junto.",
-      text: "Yoga, pilates de solo e alongamento guiado em vídeos curtos, liberados para quem compra MOVA LEV.",
-      cta: { label: "Assistir às aulas", href: "/studio" },
-      classes: [
-        { title: "Yoga ao acordar", meta: "12 min · iniciante", tone: "#4D5A3A", videoUrl: null },
-        { title: "Pilates de solo", meta: "20 min · intermediário", tone: "#5E564D", videoUrl: null },
-        { title: "Alongamento noturno", meta: "8 min · todos", tone: "#3D3832", videoUrl: null },
-      ],
-    },
     instagram: {
       title: "#MovimentoÉVida",
       handle: "@mova.lev",

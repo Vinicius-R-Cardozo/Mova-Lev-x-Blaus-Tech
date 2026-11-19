@@ -425,7 +425,7 @@ export async function adminCatalogRoutes(app: FastifyInstance) {
     return reply.code(204).send();
   });
 
-  // ── Conteúdo da Home (hero, Na campanha, Compre o look, Studio…) ──
+  // ── Conteúdo da Home (hero, Na campanha, Compre o look, Instagram) ──
   app.get("/admin/settings/home", { config: { allow: "staff" } }, async () => homeContentSchema.parse((await prisma.setting.findUnique({ where: { key: "home" } }))?.value));
 
   app.put("/admin/settings/home", { config: { allow: "staff" } }, async (req) => {

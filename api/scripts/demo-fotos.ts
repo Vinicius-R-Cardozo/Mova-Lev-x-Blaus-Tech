@@ -75,12 +75,10 @@ const BANNERS: Record<string, string> = {
   acessorios: "1651786120506-390d37d4d9e3",
 };
 
-/** Home: hero, Compre o look, Sensações, Studio e Instagram. */
+/** Home: hero, Compre o look e Instagram. */
 const HOME = {
   hero: "1747239685045-fcbcf98985db",
   look: "1713201670701-217932c674ae",
-  sensations: ["1713201673819-122ab540f947", "1667586733525-0eea514bfb49"],
-  studio: ["1717500251833-d807c5753ded", "1717500252179-2811af29e4f7", "1747240031720-dced770be260"],
   instagram: [
     "1607957598794-451c9938284a",
     "1713201670701-217932c674ae",
@@ -163,8 +161,6 @@ async function aplicar() {
   home.hero.posterUrl ??= await url(HOME.hero, "largo");
   home.shopTheLook.imageUrl ??= await url(HOME.look, "retrato");
   if (home.shopTheLook.imageUrl.includes("/demo/")) Object.assign(home.shopTheLook, LOOK);
-  for (const [i, s] of home.sensations.entries()) if (HOME.sensations[i]) s.imageUrl ??= await url(HOME.sensations[i]!, "retrato");
-  for (const [i, c] of home.studio.classes.entries()) if (HOME.studio[i]) c.imageUrl ??= await url(HOME.studio[i]!, "retrato");
   for (const [i, t] of home.instagram.tiles.entries()) t.imageUrl ??= await url(HOME.instagram[i % HOME.instagram.length]!, "quadrado");
   await prisma.setting.update({ where: { key: "home" }, data: { value: homeContentSchema.parse(home) } });
 

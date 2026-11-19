@@ -31,10 +31,6 @@ Trabalhamos com duas sensações. **Toque Nuvem** é o tecido de toque amanteiga
 - Poucas peças por coleção, pensadas para durar e combinar.
 - Troca grátis em até 30 dias, porque caimento é pessoal.
 
-## Studio MOVA
-
-Quem compra MOVA LEV ganha acesso ao Studio: aulas curtas de yoga, pilates de solo e alongamento para respirar junto. [Conheça o Studio](/#studio).
-
 [Ver as novidades da coleção](/colecao/novidades)
 `,
   },

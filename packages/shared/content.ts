@@ -27,15 +27,6 @@ export const homeContentSchema = z.object({
     cta: z.string(),
     items: z.array(slugRef.extend({ hotspot: z.object({ x: z.number().min(0).max(100), y: z.number().min(0).max(100) }) })).max(6),
   }),
-  sensations: z.array(z.object({ sensation: z.enum(SENSATIONS), title: z.string(), text: z.string(), href: z.string(), imageUrl: z.string().url().nullable().optional() })).max(2),
-  studio: z.object({
-    kicker: z.string(),
-    title: z.string(),
-    titleEmphasis: z.string(),
-    text: z.string(),
-    cta,
-    classes: z.array(z.object({ title: z.string(), meta: z.string(), tone: z.string(), videoUrl: z.string().url().nullable(), imageUrl: z.string().url().nullable().optional() })).max(6),
-  }),
   instagram: z.object({
     title: z.string(),
     handle: z.string(),
@@ -135,7 +126,6 @@ export const siteContentSchema = z.object({
     .default([
       { label: "Quiz do ajuste", href: "/guia-de-tamanhos" },
       { label: "Clube MOVA", href: "/conta" },
-      { label: "Aulas abertas", href: "/#studio" },
     ]),
   benefits: z
     .array(z.object({ icon: z.enum(BENEFIT_ICONS), title: z.string().trim().min(1).max(40), text: z.string().trim().max(60) }))
@@ -155,7 +145,7 @@ export const siteContentSchema = z.object({
         .default([
           { title: "Loja", links: [{ label: "Novidades", href: "/colecao/novidades" }, { label: "Leggings", href: "/colecao/leggings" }, { label: "Tops", href: "/colecao/tops" }, { label: "Conjuntos", href: "/colecao/conjuntos" }] },
           { title: "Ajuda", links: [{ label: "Trocas e devoluções", href: "/trocas-e-devolucoes" }, { label: "Guia de tamanhos", href: "/guia-de-tamanhos" }, { label: "Entregas", href: "/trocas-e-devolucoes#entregas" }, { label: "Contato", href: "/contato" }] },
-          { title: "Marca", links: [{ label: "Manifesto", href: "/sobre" }, { label: "Studio MOVA", href: "/#studio" }, { label: "Instagram", href: "https://instagram.com/mova.lev" }] },
+          { title: "Marca", links: [{ label: "Manifesto", href: "/sobre" }, { label: "Instagram", href: "https://instagram.com/mova.lev" }] },
         ]),
       bottomNote: z.string().trim().max(120).default("Pix · Cartão em até {{parcelas}}x · Boleto"),
     })
