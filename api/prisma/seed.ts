@@ -390,8 +390,8 @@ const settings = {
     },
     instagram: {
       title: "#MovimentoÉVida",
-      handle: "@movalev",
-      url: "https://instagram.com/movalev",
+      handle: "@mova.lev",
+      url: "https://instagram.com/mova.lev",
       tiles: [
         { tone: "#E6D5C5", caption: "FOTO · ALONGAMENTO NA AREIA" },
         { tone: "#DDE0D3", caption: "FOTO · YOGA AO AR LIVRE" },

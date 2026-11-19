@@ -47,7 +47,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           data={{
             "@context": "https://schema.org",
             "@graph": [
-              { "@type": "Organization", "@id": `${SITE_URL}/#org`, name: SITE_NAME, url: SITE_URL, logo: `${SITE_URL}/brand/mova-lev-logo-completa-preto.svg`, sameAs: ["https://instagram.com/movalev"] },
+              { "@type": "Organization", "@id": `${SITE_URL}/#org`, name: SITE_NAME, url: SITE_URL, logo: `${SITE_URL}/brand/mova-lev-logo-completa-preto.svg`, sameAs: [storeConfig.store.instagram, storeConfig.store.tiktok, storeConfig.store.pinterest, storeConfig.store.youtube].filter(Boolean) },
               {
                 "@type": "WebSite",
                 "@id": `${SITE_URL}/#site`,

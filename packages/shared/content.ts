@@ -73,7 +73,7 @@ export const storeSettingsSchema = z.object({
     .regex(/^$|^\+?\d{10,13}$/, "Só números, com DDD (ex.: 11987654321)")
     .default(""),
   hours: optText(120).default("segunda a sexta, das 9h às 18h"),
-  instagram: z.string().trim().url("URL inválida").or(z.literal("")).default("https://instagram.com/movalev"),
+  instagram: z.string().trim().url("URL inválida").or(z.literal("")).default("https://instagram.com/mova.lev"),
   tiktok: z.string().trim().url("URL inválida").or(z.literal("")).default(""),
   pinterest: z.string().trim().url("URL inválida").or(z.literal("")).default(""),
   youtube: z.string().trim().url("URL inválida").or(z.literal("")).default(""),
@@ -155,7 +155,7 @@ export const siteContentSchema = z.object({
         .default([
           { title: "Loja", links: [{ label: "Novidades", href: "/colecao/novidades" }, { label: "Leggings", href: "/colecao/leggings" }, { label: "Tops", href: "/colecao/tops" }, { label: "Conjuntos", href: "/colecao/conjuntos" }] },
           { title: "Ajuda", links: [{ label: "Trocas e devoluções", href: "/trocas-e-devolucoes" }, { label: "Guia de tamanhos", href: "/guia-de-tamanhos" }, { label: "Entregas", href: "/trocas-e-devolucoes#entregas" }, { label: "Contato", href: "/contato" }] },
-          { title: "Marca", links: [{ label: "Manifesto", href: "/sobre" }, { label: "Studio MOVA", href: "/#studio" }, { label: "Instagram", href: "https://instagram.com/movalev" }] },
+          { title: "Marca", links: [{ label: "Manifesto", href: "/sobre" }, { label: "Studio MOVA", href: "/#studio" }, { label: "Instagram", href: "https://instagram.com/mova.lev" }] },
         ]),
       bottomNote: z.string().trim().max(120).default("Pix · Cartão em até {{parcelas}}x · Boleto"),
     })

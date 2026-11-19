@@ -242,7 +242,7 @@ Ficou na dúvida? A primeira troca é grátis em até 30 dias. [Veja como funcio
 
 - E-mail: [{{email}}](mailto:{{email}})
 - WhatsApp: {{whatsapp?}}
-- Instagram: [@movalev]({{instagram}})
+- Instagram: [@mova.lev]({{instagram}})
 - Atendimento: {{horario}}
 
 Antes de escrever, talvez a resposta esteja em [Trocas e entregas](/trocas-e-devolucoes) ou no [Guia de tamanhos](/guia-de-tamanhos).
