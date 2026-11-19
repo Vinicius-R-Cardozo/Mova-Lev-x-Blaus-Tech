@@ -9,8 +9,11 @@ import { useCart } from "@/lib/cart";
 import { cn } from "@/lib/cn";
 import { defaultSize } from "./lookToCart";
 
-/** Recorte da foto do look: mais embaixo, para a legging não ficar fora do quadro largo do desktop. */
-const FOCUS = { x: 0.5, y: 0.7 };
+/**
+ * Recorte da foto do look nas telas em que o quadro não é retrato (tablet).
+ * No desktop o quadro tem a proporção da foto (3:4) e ela aparece inteira.
+ */
+const FOCUS = { x: 0.5, y: 0.45 };
 
 /**
  * Com foto, os pontos (x, y em % da FOTO) viram posição no quadro levando em conta
@@ -54,12 +57,12 @@ export function ShopTheLook({ look }: { look: HomeDTO["shopTheLook"] }) {
   };
 
   return (
-    <section aria-labelledby="look-titulo" className="grid lg:grid-cols-[54%_1fr]">
-      <div ref={cover.ref} className="relative">
+    <section aria-labelledby="look-titulo" className="grid lg:grid-cols-[auto_minmax(0,1fr)]">
+      <div ref={cover.ref} className="relative lg:aspect-[3/4] lg:h-[clamp(560px,58vw,860px)]">
       <PhotoPlaceholder
         caption={look.imageUrl ? undefined : look.caption}
         captionClassName="bottom-7 left-4 text-texto-3 md:left-gutter"
-        className="h-[520px] md:h-[780px]"
+        className="h-[520px] md:h-[780px] lg:h-full"
         style={{ background: "linear-gradient(160deg,#E3D3C3 0%,#D8C8B8 55%,#CFC1B2 100%)" }}
       >
         {look.imageUrl && (
@@ -67,7 +70,7 @@ export function ShopTheLook({ look }: { look: HomeDTO["shopTheLook"] }) {
             src={look.imageUrl}
             alt={look.caption}
             fill
-            sizes="(min-width: 1024px) 54vw, 100vw"
+            sizes="(min-width: 1024px) 645px, 100vw"
             className="object-cover"
             style={{ objectPosition: `${FOCUS.x * 100}% ${FOCUS.y * 100}%` }}
             onLoad={(e: React.SyntheticEvent<HTMLImageElement>) => cover.onImageLoad(e.currentTarget)}
@@ -106,8 +109,8 @@ export function ShopTheLook({ look }: { look: HomeDTO["shopTheLook"] }) {
       </PhotoPlaceholder>
       </div>
 
-      <div className="flex flex-col justify-center bg-bege px-4 py-14 md:px-16 lg:py-0">
-        <div data-reveal>
+      <div className="flex flex-col justify-center bg-bege px-4 py-14 md:px-16 lg:py-0 xl:px-24">
+        <div data-reveal className="lg:max-w-[640px]">
         <p className="label text-texto-3">{look.kicker}</p>
         <h2 id="look-titulo" className="mt-5 text-h2-sm md:text-h2">
           {look.title} <em>{look.titleEmphasis}</em>
